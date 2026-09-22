@@ -1,0 +1,30 @@
+{
+  "name": "fashion-hologram-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "generate:demo-model": "node scripts/generate-demo-model.mjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "latest",
+    "@react-three/fiber": "latest",
+    "next": "16.3.5",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "three": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@types/three": "latest",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "16.3.5",
+    "typescript": "^6.0.0"
+  }
+}
