@@ -4,13 +4,14 @@ import { TrackingState } from "./types";
 export type TrackingTransitionInput = {
   current: TrackingState;
   personDetected: boolean;
+  calibrating?: boolean;
   now: number;
   lastPersonSeenAt: number | null;
 };
 
-export function nextTrackingState({ current, personDetected, now, lastPersonSeenAt }: TrackingTransitionInput) {
+export function nextTrackingState({ current, personDetected, calibrating = false, now, lastPersonSeenAt }: TrackingTransitionInput) {
   if (personDetected) {
-    return current === TrackingState.CALIBRATING ? TrackingState.CALIBRATING : TrackingState.TRACKING;
+    return calibrating ? TrackingState.CALIBRATING : TrackingState.TRACKING;
   }
 
   if (current === TrackingState.NO_PERSON) return TrackingState.NO_PERSON;

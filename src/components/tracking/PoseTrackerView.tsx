@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { TrackedModelViewport } from "@/components/model/TrackedModelViewport";
+import type { BoneMappingReport } from "@/lib/model/boneMapping";
 import { TRACKED_JOINTS, TrackingState } from "@/lib/tracking/types";
+import { CalibrationStatus } from "./CalibrationStatus";
 import { PoseLandmarkOverlay } from "./PoseLandmarkOverlay";
+import { useCalibration } from "./useCalibration";
 import { usePoseTracker } from "./usePoseTracker";
 
 const STATE_LABEL: Record<TrackingState, string> = {
@@ -23,8 +27,14 @@ export function PoseTrackerView() {
     error,
     start,
     stop,
+    setCalibrating,
   } = usePoseTracker();
   const [debugVisible, setDebugVisible] = useState(true);
+  const [avatarVisible, setAvatarVisible] = useState(true);
+  const [skeletonVisible, setSkeletonVisible] = useState(false);
+  const [boneReport, setBoneReport] = useState<BoneMappingReport | null>(null);
+  const calibration = useCalibration({ trackerPhase: phase, trackingState, poseFrameRef, setCalibrating });
+  const handleBoneMap = useCallback((report: BoneMappingReport) => setBoneReport(report), []);
   const isRunning = phase === "running";
   const isBusy = phase === "initializing";
 
@@ -32,13 +42,21 @@ export function PoseTrackerView() {
     <main className="tracking-page">
       <header className="tracking-header">
         <div>
-          <p className="eyebrow">SMART MIRROR / PHASE 2</p>
-          <h1>Pose tracking</h1>
+          <p className="eyebrow">SMART MIRROR / PHASE 3</p>
+          <h1>Skeleton mapping</h1>
         </div>
         <div className="tracking-actions">
           <label className="debug-toggle">
             <input type="checkbox" checked={debugVisible} onChange={(event) => setDebugVisible(event.target.checked)} />
             DEBUG LANDMARKS
+          </label>
+          <label className="debug-toggle">
+            <input type="checkbox" checked={avatarVisible} onChange={(event) => setAvatarVisible(event.target.checked)} />
+            AVATAR
+          </label>
+          <label className="debug-toggle">
+            <input type="checkbox" checked={skeletonVisible} onChange={(event) => setSkeletonVisible(event.target.checked)} />
+            SKELETON
           </label>
           {isRunning ? (
             <button className="button secondary" type="button" onClick={stop}>Stop camera</button>
@@ -64,6 +82,17 @@ export function PoseTrackerView() {
           <div className="camera-badge">Mirrored preview</div>
         </div>
 
+        <div className="tracked-model-shell">
+          <TrackedModelViewport
+            poseFrameRef={poseFrameRef}
+            calibration={calibration.profile}
+            avatarVisible={avatarVisible}
+            skeletonVisible={skeletonVisible}
+            onBoneMap={handleBoneMap}
+          />
+          <div className="camera-badge">Tracked model · Built-in demo</div>
+        </div>
+
         <aside className="tracking-diagnostics">
           <div className="diagnostic-heading">
             <div>
@@ -74,6 +103,13 @@ export function PoseTrackerView() {
           </div>
 
           {error ? <p className="tracking-error" role="alert">{error}</p> : null}
+
+          <CalibrationStatus
+            stage={calibration.stage}
+            profile={calibration.profile}
+            boneReport={boneReport}
+            onRecalibrate={calibration.recalibrate}
+          />
 
           <dl className="metrics tracking-metrics">
             <div><dt>Inference FPS</dt><dd>{diagnostics.fps.toFixed(1)}</dd></div>

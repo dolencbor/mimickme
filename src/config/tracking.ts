@@ -5,6 +5,10 @@ export const TRACKING_CONFIG = {
   diagnosticsIntervalMs: 400,
   maxInferenceFps: 30,
   cameraPermissionTimeoutMs: 20_000,
+  neutralHoldMs: 1_000,
+  calibrationDurationMs: 1_400,
+  minimumCalibrationFrames: 12,
+  rotationSmoothingSpeed: 12,
 } as const;
 
 export const MEDIAPIPE_CONFIG = {

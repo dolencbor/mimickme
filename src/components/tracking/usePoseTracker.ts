@@ -35,6 +35,7 @@ export function usePoseTracker() {
   const animationFrameRef = useRef(0);
   const stateRef = useRef(TrackingState.NO_PERSON);
   const lastPersonSeenAtRef = useRef<number | null>(null);
+  const calibratingRef = useRef(false);
   const runIdRef = useRef(0);
   const [phase, setPhase] = useState<TrackerPhase>("idle");
   const [trackingState, setTrackingState] = useState(TrackingState.NO_PERSON);
@@ -57,6 +58,7 @@ export function usePoseTracker() {
     poseFrameRef.current = { ...EMPTY_POSE_FRAME };
     stateRef.current = TrackingState.NO_PERSON;
     lastPersonSeenAtRef.current = null;
+    calibratingRef.current = false;
     setTrackingState(TrackingState.NO_PERSON);
     setDiagnostics({ fps: 0, confidence: 0, backend: null, people: 0 });
     setError(null);
@@ -167,6 +169,7 @@ export function usePoseTracker() {
             const nextState = nextTrackingState({
               current: stateRef.current,
               personDetected: frame.trackingActive,
+              calibrating: calibratingRef.current,
               now,
               lastPersonSeenAt: lastPersonSeenAtRef.current,
             });
@@ -204,5 +207,9 @@ export function usePoseTracker() {
 
   useEffect(() => disposeResources, [disposeResources]);
 
-  return { videoRef, poseFrameRef, phase, trackingState, diagnostics, error, start, stop };
+  const setCalibrating = useCallback((active: boolean) => {
+    calibratingRef.current = active;
+  }, []);
+
+  return { videoRef, poseFrameRef, phase, trackingState, diagnostics, error, start, stop, setCalibrating };
 }
