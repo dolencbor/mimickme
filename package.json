@@ -11,6 +11,7 @@
     "generate:demo-model": "node scripts/generate-demo-model.mjs"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.0.1",
     "@react-three/drei": "latest",
     "@react-three/fiber": "latest",
     "next": "16.3.5",
