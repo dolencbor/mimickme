@@ -9,6 +9,12 @@ export const TRACKING_CONFIG = {
   calibrationDurationMs: 1_400,
   minimumCalibrationFrames: 12,
   rotationSmoothingSpeed: 12,
+  positionSmoothingSpeed: 7,
+  rootHorizontalScale: 1.8,
+  rootVerticalScale: 1.1,
+  rootHorizontalLimit: 0.65,
+  rootVerticalLimit: 0.35,
+  handCursorConfidenceThreshold: 0.5,
 } as const;
 
 export const MEDIAPIPE_CONFIG = {

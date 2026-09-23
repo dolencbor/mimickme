@@ -2,8 +2,8 @@
 
 import { Bounds, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, type RefObject } from "react";
-import { Bone, Quaternion, SkeletonHelper } from "three";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { Bone, Group, Quaternion, SkeletonHelper, Vector3 } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
@@ -43,6 +43,7 @@ type Props = {
 };
 
 export function ModelController({ url, poseFrameRef, calibration, avatarVisible, skeletonVisible, onBoneMap }: Props) {
+  const rootRef = useRef<Group>(null);
   const gltf = useGLTF(url);
   const model = useMemo(() => clone(gltf.scene), [gltf.scene]);
   const rig = useMemo(() => {
@@ -66,6 +67,7 @@ export function ModelController({ url, poseFrameRef, calibration, avatarVisible,
     localDelta: new Quaternion(),
     target: new Quaternion(),
   }), []);
+  const rootTargetRef = useRef(new Vector3());
 
   useEffect(() => onBoneMap(rig.report), [onBoneMap, rig.report]);
 
@@ -90,6 +92,22 @@ export function ModelController({ url, poseFrameRef, calibration, avatarVisible,
     const frame = poseFrameRef.current;
     const bonePose = mapper?.map(frame);
     const smoothing = 1 - Math.exp(-TRACKING_CONFIG.rotationSmoothingSpeed * deltaSeconds);
+    const rootSmoothing = 1 - Math.exp(-TRACKING_CONFIG.positionSmoothingSpeed * deltaSeconds);
+
+    const rootTarget = rootTargetRef.current;
+    rootTarget.set(0, 0, 0);
+    const neutralCenter = calibration?.neutralPose.bodyCenter;
+    if (frame.trackingActive && frame.bodyCenter && neutralCenter) {
+      rootTarget.x = Math.max(
+        -TRACKING_CONFIG.rootHorizontalLimit,
+        Math.min(TRACKING_CONFIG.rootHorizontalLimit, -(frame.bodyCenter.x - neutralCenter.x) * TRACKING_CONFIG.rootHorizontalScale),
+      );
+      rootTarget.y = Math.max(
+        -TRACKING_CONFIG.rootVerticalLimit,
+        Math.min(TRACKING_CONFIG.rootVerticalLimit, (neutralCenter.y - frame.bodyCenter.y) * TRACKING_CONFIG.rootVerticalScale),
+      );
+    }
+    rootRef.current?.position.lerp(rootTarget, rootSmoothing);
 
     for (const semantic of ANIMATION_ORDER) {
       const rotation = bonePose?.rotations[semantic];
@@ -117,8 +135,10 @@ export function ModelController({ url, poseFrameRef, calibration, avatarVisible,
   });
 
   return (
-    <Bounds fit clip observe margin={1.3}>
-      <primitive object={model} />
+    <Bounds fit clip margin={1.3}>
+      <group ref={rootRef}>
+        <primitive object={model} />
+      </group>
     </Bounds>
   );
 }

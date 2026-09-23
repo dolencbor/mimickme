@@ -10,6 +10,8 @@
 - React receives only tracking-state changes and diagnostics throttled to 2.5 Hz; landmark drawing runs directly on a canvas animation loop.
 - Calibration samples a stable neutral pose into a `CalibrationProfile`. `SkeletonMapper` converts subsequent landmark directions into quaternion deltas without React state updates per frame.
 - The model controller auto-detects exact bone aliases, preserves rest rotations, converts world-space deltas into each bone's parent space, and applies frame-rate-independent quaternion smoothing.
+- Phase 4 keeps pose data unmirrored while mirroring only camera/cursor presentation. Calibrated hip-center deltas drive restrained, clamped, smoothed model-root translation.
+- Exhibition mode removes developer chrome while preserving camera startup and recalibration; keyboard fallbacks are `D` debug, `A` avatar, and `C` recalibrate.
 
 ## Important files
 
@@ -23,6 +25,7 @@
 - `src/lib/model/boneMapping.ts` — conservative alias-based bone auto-detection with an explicit manual fallback.
 - `src/config/boneMap.ts` — semantic bone names, common aliases, and `MANUAL_BONE_MAP` overrides.
 - `src/config/tracking.ts` — confidence, timing, inference, WASM, and model configuration.
+- `src/lib/tracking/handCursor.ts` — left/right wrist conversion into mirrored normalized cursor coordinates.
 
 ## Completed phases
 
@@ -32,6 +35,8 @@
 - Checks: TypeScript, ESLint, production build, camera start/stop cleanup, MediaPipe GPU initialization, live inference (~25 FPS), diagnostics, and browser error overlay checks pass.
 - Phase 3 — Calibration + Skeleton Mapping: complete.
 - Checks: TypeScript, ESLint, production build, WebGL model render, live GPU inference (~25 FPS), 38-frame neutral calibration, auto-mapping, avatar/skeleton debug toggles, and browser error-overlay checks pass.
+- Phase 4 — Smart Mirror: complete.
+- Checks: TypeScript, ESLint, production build, exact desktop 50/50 split, responsive/exhibition layouts, webcam readiness, GPU inference (~25 FPS), model/avatar isolation, debug controls, hand selection, keyboard controls, and browser console/error-overlay checks pass.
 
 ## Bone mappings
 
@@ -44,5 +49,5 @@
 - No production CLO/Blender garment GLB has been supplied or validated yet.
 - Drei/R3F currently emits a harmless Three.js `Clock` deprecation warning from dependency code; revisit during Phase 9 hardening.
 - MediaPipe emits internal WebGL/projection warnings while inference remains operational; revisit during Phase 9 hardening.
-- The automated browser run completed calibration, but sustained full-body movement was not available long enough to visually validate every elbow, knee, and hip rotation; confirm those axes with a fully visible standing subject before exhibition use.
-- Next phase: Phase 4 — Smart Mirror.
+- Automated browser runs completed calibration in Phase 3, but sustained full-body movement was not available long enough to visually validate every limb axis and the full root-translation range; confirm with a fully visible standing subject before exhibition use.
+- Next phase: Phase 5 — Cross-Window System.

@@ -17,9 +17,10 @@ type Props = {
   profile: CalibrationProfile | null;
   boneReport: BoneMappingReport | null;
   onRecalibrate: () => void;
+  showDebugDetails?: boolean;
 };
 
-export function CalibrationStatus({ stage, profile, boneReport, onRecalibrate }: Props) {
+export function CalibrationStatus({ stage, profile, boneReport, onRecalibrate, showDebugDetails = false }: Props) {
   return (
     <section className={`calibration-status ${stage.toLowerCase()}`}>
       <div>
@@ -34,7 +35,7 @@ export function CalibrationStatus({ stage, profile, boneReport, onRecalibrate }:
       </div>
       {stage === "READY" ? <button className="button secondary" type="button" onClick={onRecalibrate}>Recalibrate</button> : null}
 
-      {boneReport ? (
+      {showDebugDetails && boneReport ? (
         <details className="bone-map-details">
           <summary>Bone mapping ({SEMANTIC_BONES.length - boneReport.unresolved.length}/{SEMANTIC_BONES.length})</summary>
           {boneReport.missingRequired.length > 0 ? (
