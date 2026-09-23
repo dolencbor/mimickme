@@ -40,6 +40,8 @@ type Props = {
   autoFit?: boolean;
   centerModel?: boolean;
   presentationRef?: RefObject<Group | null>;
+  motionRef?: RefObject<Group | null>;
+  trackingInfluenceRef?: RefObject<number>;
   onModelRadius?: (radius: number) => void;
 };
 
@@ -52,6 +54,8 @@ export function ModelController({
   autoFit = true,
   centerModel = false,
   presentationRef,
+  motionRef,
+  trackingInfluenceRef,
   onModelRadius,
 }: Props) {
   const rootRef = useRef<Group>(null);
@@ -83,9 +87,11 @@ export function ModelController({
     deltaWorld: new Quaternion(),
     parentWorld: new Quaternion(),
     localDelta: new Quaternion(),
+    trackedTarget: new Quaternion(),
     target: new Quaternion(),
   }), []);
   const rootTargetRef = useRef(new Vector3());
+  const lastTrackedFrameRef = useRef<SkeletalFrame | null>(null);
 
   useEffect(() => onBoneMap(rig.report), [onBoneMap, rig.report]);
   useEffect(() => onModelRadius?.(prepared.radius), [onModelRadius, prepared.radius]);
@@ -109,22 +115,25 @@ export function ModelController({
 
   useFrame((_, deltaSeconds) => {
     const frame = skeletalFrameRef.current;
+    if (trackingInfluenceRef && frame.trackingActive) lastTrackedFrameRef.current = frame;
+    const motionFrame = trackingInfluenceRef ? (frame.trackingActive ? frame : lastTrackedFrameRef.current) : frame;
+    const trackingInfluence = trackingInfluenceRef ? trackingInfluenceRef.current : 1;
     const smoothing = 1 - Math.exp(-TRACKING_CONFIG.rotationSmoothingSpeed * deltaSeconds);
     const rootSmoothing = 1 - Math.exp(-TRACKING_CONFIG.positionSmoothingSpeed * deltaSeconds);
 
     const rootTarget = rootTargetRef.current;
-    rootTarget.fromArray(frame.trackingActive ? frame.rootPosition : [0, 0, 0]);
+    rootTarget.fromArray(motionFrame?.rootPosition ?? [0, 0, 0]).multiplyScalar(trackingInfluence);
     rootRef.current?.position.lerp(rootTarget, rootSmoothing);
 
     for (const semantic of ANIMATION_ORDER) {
-      const rotation = frame.rotations[semantic];
+      const rotation = motionFrame?.rotations[semantic];
       const bones = rig.targets[semantic];
       if (!bones) continue;
       for (const bone of bones) {
         const rest = rig.restRotations.get(bone);
         if (!rest) continue;
         frameQuaternions.target.copy(rest);
-        if (rotation && frame.trackingActive) {
+        if (rotation && motionFrame?.trackingActive) {
           frameQuaternions.deltaWorld.fromArray(rotation);
           if (bone.parent) bone.parent.getWorldQuaternion(frameQuaternions.parentWorld);
           else frameQuaternions.parentWorld.identity();
@@ -133,7 +142,8 @@ export function ModelController({
             .invert()
             .multiply(frameQuaternions.deltaWorld)
             .multiply(frameQuaternions.parentWorld);
-          frameQuaternions.target.copy(frameQuaternions.localDelta).multiply(rest);
+          frameQuaternions.trackedTarget.copy(frameQuaternions.localDelta).multiply(rest);
+          frameQuaternions.target.slerpQuaternions(rest, frameQuaternions.trackedTarget, trackingInfluence);
         }
         bone.quaternion.slerp(frameQuaternions.target, smoothing);
         bone.updateWorldMatrix(true, false);
@@ -143,8 +153,10 @@ export function ModelController({
 
   const content = (
     <group ref={presentationRef}>
-      <group ref={rootRef}>
-        <primitive object={model} />
+      <group ref={motionRef}>
+        <group ref={rootRef}>
+          <primitive object={model} />
+        </group>
       </group>
     </group>
   );

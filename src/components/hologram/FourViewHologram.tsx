@@ -4,13 +4,16 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useCallback, useMemo, useRef, useState, type RefObject } from "react";
 import { Group, MathUtils, PerspectiveCamera, Vector3 } from "three";
 import { HOLOGRAM_RENDER_CONFIG, HOLOGRAM_VIEWS } from "@/config/hologram";
+import { HologramMotionController } from "./HologramMotionController";
 import { ModelController } from "@/components/model/ModelController";
 import { ModelErrorBoundary } from "@/components/model/ModelErrorBoundary";
 import type { SkeletalFrame } from "@/lib/tracking/skeletalFrame";
+import type { TrackingState } from "@/lib/tracking/types";
 
 type Props = {
   modelUrl: string;
   skeletalFrameRef: RefObject<SkeletalFrame>;
+  trackingState: TrackingState;
   avatarVisible: boolean;
 };
 
@@ -70,8 +73,10 @@ function FourCameraRenderer({ presentationRef, modelRadius }: RendererProps) {
   return null;
 }
 
-export function FourViewHologram({ modelUrl, skeletalFrameRef, avatarVisible }: Props) {
-  const presentationRef = useRef<Group>(null);
+export function FourViewHologram({ modelUrl, skeletalFrameRef, trackingState, avatarVisible }: Props) {
+  const viewRotationRef = useRef<Group>(null);
+  const motionRef = useRef<Group>(null);
+  const trackingInfluenceRef = useRef(0);
   const [modelRadius, setModelRadius] = useState(1.5);
   const handleRadius = useCallback((radius: number) => setModelRadius((current) => Math.abs(current - radius) < 0.001 ? current : radius), []);
   const ignoreBoneReport = useCallback(() => {}, []);
@@ -88,6 +93,12 @@ export function FourViewHologram({ modelUrl, skeletalFrameRef, avatarVisible }: 
             <ambientLight intensity={1.05} />
             <directionalLight position={[4, 6, 5]} intensity={2.2} />
             <directionalLight position={[-4, 2, -3]} intensity={1.1} />
+            <HologramMotionController
+              motionRef={motionRef}
+              trackingInfluenceRef={trackingInfluenceRef}
+              trackingState={trackingState}
+              modelRadius={modelRadius}
+            />
             <ModelController
               url={modelUrl}
               skeletalFrameRef={skeletalFrameRef}
@@ -96,10 +107,12 @@ export function FourViewHologram({ modelUrl, skeletalFrameRef, avatarVisible }: 
               onBoneMap={ignoreBoneReport}
               autoFit={false}
               centerModel
-              presentationRef={presentationRef}
+              presentationRef={viewRotationRef}
+              motionRef={motionRef}
+              trackingInfluenceRef={trackingInfluenceRef}
               onModelRadius={handleRadius}
             />
-            <FourCameraRenderer presentationRef={presentationRef} modelRadius={modelRadius} />
+            <FourCameraRenderer presentationRef={viewRotationRef} modelRadius={modelRadius} />
           </Canvas>
         </Suspense>
       </ModelErrorBoundary>

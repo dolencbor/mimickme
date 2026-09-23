@@ -76,3 +76,12 @@ export const HOLOGRAM_RENDER_CONFIG = {
   minimumCameraDistance: 1.5,
   maxPixelRatio: 1.25,
 } as const;
+
+export const HOLOGRAM_MOTION_CONFIG = {
+  idleRotationRadiansPerSecond: 0.22,
+  idleFloatCyclesPerSecond: 0.16,
+  idleFloatAmplitudeToModelRadius: 0.1,
+  trackingTransitionSeconds: 0.75,
+  trackingLostDelayMs: 900,
+  idleRotationReturnSpeed: 7,
+} as const;

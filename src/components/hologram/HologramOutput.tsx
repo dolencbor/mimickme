@@ -34,14 +34,15 @@ export function HologramOutput() {
         <FourViewHologram
           modelUrl={source.url}
           skeletalFrameRef={skeletalFrameRef}
+          trackingState={trackingState}
           avatarVisible={avatarVisible}
         />
       </div>
 
       <header className="hologram-controls">
         <div>
-          <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 6</p>
-          <h1>Four-view hologram</h1>
+          <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 7</p>
+          <h1>Idle + takeover</h1>
         </div>
         <div className="button-row">
           <button className="button primary" type="button" onClick={enterFullscreen}>Enter fullscreen</button>
@@ -53,6 +54,7 @@ export function HologramOutput() {
         <span className={`connection-dot ${status}`} />
         <span>{status === "connected" ? "Mirror connected" : status === "unsupported" ? "BroadcastChannel unavailable" : "Waiting for mirror"}</span>
         <span>{trackingState.replace("_", " ")}</span>
+        <span>{trackingState === "TRACKING" ? "Live takeover" : "Idle motion"}</span>
         <span>{source.label}</span>
       </div>
       {modelError ? <p className="hologram-error" role="alert">{modelError}</p> : null}

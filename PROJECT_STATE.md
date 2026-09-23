@@ -17,6 +17,8 @@
 - Active model configuration is stored in localStorage; local GLB blobs are persisted in IndexedDB and resolved to short-lived object URLs independently in each window.
 - The hologram uses one R3F scene, one cloned rig, and one skeletal update. A custom scissor renderer draws FRONT/RIGHT/BACK/LEFT through four configured cameras into a responsive square cross layout.
 - Camera azimuth/elevation/distance, model rotation offset, viewport rotation, and flips are isolated in `src/config/hologram.ts`; model bounds drive shared camera auto-framing.
+- Hologram idle motion and tracking takeover run entirely in the R3F frame loop. A reusable `trackingInfluence` ref blends the cached live pose/root from 0–1 while a separate presentation transform handles slow Y rotation and sinusoidal float.
+- Tracking takeover lasts 0.75 seconds. Tracking loss holds the last valid pose for 0.9 seconds before blending smoothly back to rest and idle motion; all timings and amplitudes are centralized in `src/config/hologram.ts`.
 
 ## Important files
 
@@ -34,8 +36,8 @@
 - `src/lib/tracking/skeletalFrame.ts` and `src/components/tracking/useSkeletalMotion.ts` — processed cross-window motion state.
 - `src/lib/channel/trackingChannel.ts` and `src/components/channel/` — versioned BroadcastChannel protocol and lifecycle hooks.
 - `src/lib/model/modelStorage.ts` — built-in/local model persistence and per-window resolution.
-- `src/components/hologram/HologramOutput.tsx` and `FourViewHologram.tsx` — synchronized four-view output, custom camera renderer, and fullscreen control.
-- `src/config/hologram.ts` — physical-view orientation and performance/framing defaults.
+- `src/components/hologram/HologramOutput.tsx`, `FourViewHologram.tsx`, and `HologramMotionController.tsx` — synchronized four-view output, idle/takeover blending, custom camera renderer, and fullscreen control.
+- `src/config/hologram.ts` — physical-view orientation, motion, transition, and performance/framing defaults.
 
 ## Completed phases
 
@@ -51,6 +53,8 @@
 - Checks: TypeScript, ESLint, production build, popup launch, bidirectional channel handshake, mirror connection status, black WebGL hologram preview, built-in model configuration, fullscreen action, zero hologram video/camera elements, zero MediaPipe assets in the hologram document, and browser console/error-overlay checks pass.
 - Phase 6 — Four-View Hologram: complete.
 - Checks: TypeScript, ESLint, production build, one-canvas/four-camera rendering, distinct cross-layout cells, centered square stage, pure-black background, model-bound auto-framing, popup handshake regression, and browser console/error-overlay checks pass.
+- Phase 7 — Idle + Takeover: complete.
+- Checks: TypeScript, ESLint, production build, visible four-view idle transform, separated per-view and shared-motion transforms, mirror connection regression, and browser console/error-overlay checks pass. The transition controller preserves the last tracked pose through the loss delay and blends pose/root influence in both directions without React state updates per frame.
 
 ## Bone mappings
 
@@ -66,4 +70,5 @@
 - Automated browser runs completed calibration in Phase 3, but sustained full-body movement was not available long enough to visually validate every limb axis and the full root-translation range; confirm with a fully visible standing subject before exhibition use.
 - IndexedDB cross-window support is implemented for local GLBs; validate it with the final production CLO file when supplied.
 - Physical pyramid orientation may require changing the isolated view rotation/flip values during on-site calibration.
-- Next phase: Phase 7 — Idle + Takeover.
+- Final full-body validation should confirm the subjective takeover feel and adjust the centralized 0.75-second blend or 0.9-second loss delay if needed in the exhibition space.
+- Next phase: Phase 8 — Hologram Calibration.
