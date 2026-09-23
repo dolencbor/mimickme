@@ -27,7 +27,7 @@ export const HOLOGRAM_VIEWS: readonly HologramViewConfig[] = [
     modelRotationOffsetDeg: 0,
     viewportRotationDeg: 180,
     horizontalFlip: false,
-    verticalFlip: false,
+    verticalFlip: true,
   },
   {
     id: "left",
@@ -40,7 +40,7 @@ export const HOLOGRAM_VIEWS: readonly HologramViewConfig[] = [
     modelRotationOffsetDeg: 0,
     viewportRotationDeg: 90,
     horizontalFlip: false,
-    verticalFlip: false,
+    verticalFlip: true,
   },
   {
     id: "right",
@@ -53,7 +53,7 @@ export const HOLOGRAM_VIEWS: readonly HologramViewConfig[] = [
     modelRotationOffsetDeg: 0,
     viewportRotationDeg: -90,
     horizontalFlip: false,
-    verticalFlip: false,
+    verticalFlip: true,
   },
   {
     id: "back",
@@ -66,7 +66,7 @@ export const HOLOGRAM_VIEWS: readonly HologramViewConfig[] = [
     modelRotationOffsetDeg: 0,
     viewportRotationDeg: 0,
     horizontalFlip: false,
-    verticalFlip: false,
+    verticalFlip: true,
   },
 ];
 
