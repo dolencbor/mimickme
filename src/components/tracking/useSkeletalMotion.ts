@@ -19,13 +19,17 @@ export function useSkeletalMotion(poseFrameRef: RefObject<PoseFrame>, calibratio
   const mapper = useMemo(() => calibration ? new SkeletonMapper(calibration) : null, [calibration]);
 
   useEffect(() => {
+    if (!mapper) {
+      skeletalFrameRef.current = { ...EMPTY_SKELETAL_FRAME };
+      return;
+    }
     let animationFrame = 0;
     let lastPoseTimestamp = -1;
     const process = () => {
       const poseFrame = poseFrameRef.current;
       if (poseFrame.timestamp !== lastPoseTimestamp) {
         lastPoseTimestamp = poseFrame.timestamp;
-        const trackingActive = Boolean(mapper && poseFrame.trackingActive);
+        const trackingActive = poseFrame.trackingActive;
         const neutralCenter = calibration?.neutralPose.bodyCenter;
         const rootPosition: RootPosition = [0, 0, 0];
         if (trackingActive && poseFrame.bodyCenter && neutralCenter) {
@@ -38,7 +42,7 @@ export function useSkeletalMotion(poseFrameRef: RefObject<PoseFrame>, calibratio
             TRACKING_CONFIG.rootVerticalLimit,
           );
         }
-        const bonePose = mapper?.map(poseFrame) ?? { timestamp: poseFrame.timestamp, rotations: {} };
+        const bonePose = mapper.map(poseFrame);
         skeletalFrameRef.current = skeletalFrameFromBonePose(bonePose, trackingActive, rootPosition);
       }
       animationFrame = window.requestAnimationFrame(process);

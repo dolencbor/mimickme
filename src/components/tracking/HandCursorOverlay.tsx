@@ -14,12 +14,16 @@ export function HandCursorOverlay({ enabled, hand, poseFrameRef }: Props) {
   const cursorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      if (cursorRef.current) cursorRef.current.hidden = true;
+      return;
+    }
     let animationFrame = 0;
     const draw = () => {
       const element = cursorRef.current;
       if (element) {
         const cursor = getHandCursor(poseFrameRef.current, hand);
-        element.hidden = !enabled || !cursor.visible;
+        element.hidden = !cursor.visible;
         if (!element.hidden) {
           element.style.left = `${cursor.cursorX * 100}%`;
           element.style.top = `${cursor.cursorY * 100}%`;

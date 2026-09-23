@@ -26,8 +26,10 @@ export function HologramOutput() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "f" && !event.repeat) void enterFullscreen();
-      if (event.key.toLowerCase() === "k" && !event.repeat) setCalibrationOpen((current) => !current);
+      const target = event.target as HTMLElement | null;
+      if (event.repeat || target?.matches("input, textarea, select")) return;
+      if (event.key.toLowerCase() === "f") void enterFullscreen();
+      if (event.key.toLowerCase() === "k") setCalibrationOpen((current) => !current);
       if (event.key === "Escape") setCalibrationOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);

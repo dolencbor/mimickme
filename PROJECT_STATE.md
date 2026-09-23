@@ -21,6 +21,9 @@
 - Tracking takeover lasts 0.75 seconds. Tracking loss holds the last valid pose for 0.9 seconds before blending smoothly back to rest and idle motion; all timings and amplitudes are centralized in `src/config/hologram.ts`.
 - Phase 8 adds a hidden `K`-key calibration panel. It adjusts model scale and XYZ offsets, shared camera distance, rendered view size, and each view's rotation/horizontal flip/vertical flip without source edits.
 - Hologram calibration uses a validated, clamped, versioned localStorage schema. Changes persist immediately, malformed or outdated data falls back safely, and reset removes the override and restores the Phase 6 orientation table.
+- Phase 9 pauses debug and cursor animation loops while their overlays are hidden, stops calibration polling after completion, and avoids starting skeletal animation work until a mapper exists.
+- Runtime and type dependencies are pinned to exact versions for reproducible installs. Three.js is pinned to `0.182.0`, the last compatible release before the `Clock` deprecation warning surfaced through React Three Fiber.
+- Camera, MediaPipe, object-URL, BroadcastChannel, and animation-frame lifecycles all have explicit cleanup paths. Production camera access is limited to secure contexts (`https://` or localhost).
 
 ## Important files
 
@@ -42,6 +45,7 @@
 - `src/components/hologram/HologramCalibrationPanel.tsx` and `useHologramCalibration.ts` — hidden calibration controls and persistent client state.
 - `src/lib/hologram/calibration.ts` — calibration schema, bounds, defaults, validation, persistence, and reset.
 - `src/config/hologram.ts` — physical-view orientation, motion, transition, and performance/framing defaults.
+- `README.md` — concise setup, model, operation, deployment, and browser requirements.
 
 ## Completed phases
 
@@ -61,6 +65,8 @@
 - Checks: TypeScript, ESLint, production build, visible four-view idle transform, separated per-view and shared-motion transforms, mirror connection regression, and browser console/error-overlay checks pass. The transition controller preserves the last tracked pose through the loss delay and blends pose/root influence in both directions without React state updates per frame.
 - Phase 8 — Hologram Calibration: complete.
 - Checks: TypeScript, ESLint, production build, hidden keyboard toggle, live global/per-view control updates, persistence across reload, complete reset, responsive panel layout, and browser console/error-overlay checks pass.
+- Phase 9 — Harden + Deploy: complete.
+- Checks: strict unused-symbol TypeScript check, ESLint, diff hygiene, reproducible dependency lock, production build, `next start`, all three routes, cross-window mirror connection, one-canvas/no-video hologram isolation, calibration shortcut, and zero production console warnings or errors all pass.
 
 ## Bone mappings
 
@@ -71,11 +77,9 @@
 ## Unresolved issues
 
 - No production CLO/Blender garment GLB has been supplied or validated yet.
-- Drei/R3F currently emits a harmless Three.js `Clock` deprecation warning from dependency code; revisit during Phase 9 hardening.
-- MediaPipe emits internal WebGL/projection warnings while inference remains operational; revisit during Phase 9 hardening.
 - Automated browser runs completed calibration in Phase 3, but sustained full-body movement was not available long enough to visually validate every limb axis and the full root-translation range; confirm with a fully visible standing subject before exhibition use.
 - IndexedDB cross-window support is implemented for local GLBs; validate it with the final production CLO file when supplied.
 - Physical pyramid orientation may require changing the isolated view rotation/flip values during on-site calibration.
 - Final full-body validation should confirm the subjective takeover feel and adjust the centralized 0.75-second blend or 0.9-second loss delay if needed in the exhibition space.
 - Physical Pepper's Ghost hardware is required for final calibration values; the browser currently stores defaults until adjusted on-site.
-- Next phase: Phase 9 — Harden + Deploy.
+- All requested MVP implementation phases are complete. Remaining work is production-model, full-body, and physical-hardware validation.

@@ -37,6 +37,7 @@ export function useCalibration({ trackerPhase, trackingState, poseFrameRef, setC
   }, [setCalibrating, transition]);
 
   useEffect(() => {
+    if (trackerPhase !== "running" || stage === "READY") return;
     let animationFrame = 0;
     const tick = (now: number) => {
       const frame = poseFrameRef.current;
@@ -81,7 +82,7 @@ export function useCalibration({ trackerPhase, trackingState, poseFrameRef, setC
 
     animationFrame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(animationFrame);
-  }, [poseFrameRef, setCalibrating, trackerPhase, trackingState, transition]);
+  }, [poseFrameRef, setCalibrating, stage, trackerPhase, trackingState, transition]);
 
   return { stage, profile, recalibrate };
 }

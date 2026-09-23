@@ -1,191 +1,57 @@
 # mimickme
 
-**A real-time digital fashion smart mirror and holographic garment experience.**
+## What the project is
 
-mimickme uses computer vision and skeletal tracking to translate a person's movements onto a digital garment in real time. A single webcam tracks the visitor while a rigged 3D garment mimics their movement, creating an interactive bridge between the physical body and digital fashion.
+mimickme is an exhibition prototype that maps one visitor's webcam-tracked body movement onto a rigged digital garment. The smart-mirror route owns MediaPipe tracking; a separate four-view Pepper's Ghost output receives processed skeletal motion through `BroadcastChannel` and does not access the camera.
 
-The project is being developed as an exhibition prototype for the Master Digital Design programme at the Amsterdam University of Applied Sciences.
+## Prerequisites
 
-## Concept
+- Node.js 20 or newer
+- pnpm 10 or newer
+- A WebGL-capable computer and webcam
+- A modern browser with camera, WebGL, IndexedDB, and `BroadcastChannel` support
 
-The experience consists of two connected outputs.
-
-### Smart Mirror
-
-A visitor stands in front of a webcam.
-
-The interface shows:
-
-- the live camera feed on one side;
-- the digital avatar or garment on the other;
-- real-time movement translated from the visitor to the 3D model.
-
-The physical person acts as the input while the digital garment becomes their virtual counterpart.
-
-### Hologram
-
-The smart mirror can open a dedicated hologram output on a second display.
-
-The same animated garment is rendered simultaneously from four virtual camera angles:
-
-```text
-              FRONT
-
-        LEFT         RIGHT
-
-               BACK
-```
-
-These views are designed for a four-sided Pepper's Ghost display, creating the illusion of a three-dimensional digital garment.
-
-Only one physical webcam is required. The four holographic perspectives are generated from the same 3D scene.
-
-## How it works
-
-```text
-Webcam
-   ↓
-MediaPipe Pose Tracking
-   ↓
-Body landmarks
-   ↓
-Pose processing
-   ↓
-Skeleton mapping
-   ↓
-Three.js armature
-   ↓
-Rigged 3D garment
-   ↓
-   ├── Smart Mirror
-   │
-   └── Four-view Hologram
-```
-
-The visitor's body is never required as part of the holographic output. It is used only as the real-time input controlling the digital skeleton.
-
-## 3D garment workflow
-
-Garments are created in **CLO 3D** and prepared for real-time rendering in **Blender**.
-
-```text
-CLO 3D
-   ↓
-Blender
-   ↓
-Rig + optimize
-   ↓
-GLB
-   ↓
-mimickme
-```
-
-The final GLB contains:
-
-- humanoid armature;
-- skinned garment;
-- optional skinned avatar;
-- optimized real-time materials.
-
-The avatar and garment remain separate, allowing the avatar to be hidden while the garment continues responding to the skeleton.
-
-## Technology
-
-- Next.js
-- React
-- TypeScript
-- Three.js
-- React Three Fiber
-- MediaPipe Pose Landmarker
-- WebGL
-- BroadcastChannel API
-- Blender
-- CLO 3D
-- Vercel
-
-## Tracking
-
-A standard webcam is used for body tracking.
-
-MediaPipe detects the visitor's body landmarks and converts them into pose information. The application maps these movements to the humanoid skeleton controlling the garment.
-
-Movement is smoothed and translated into skeletal rotations rather than directly copying landmark positions.
-
-## Hologram idle state
-
-When nobody is being tracked, the garment enters an ambient idle state:
-
-- slow rotation around its vertical axis;
-- subtle sinusoidal vertical movement.
-
-When a visitor is detected, the idle animation transitions into real-time body tracking.
-
-When tracking is lost, the garment gradually returns to its idle state.
-
-## Project status
-
-mimickme is currently an experimental exhibition prototype.
-
-Current development focuses on:
-
-- GLB garment loading;
-- webcam body tracking;
-- real-time skeletal animation;
-- smart mirror interaction;
-- four-direction hologram rendering;
-- responsive Pepper's Ghost output;
-- exhibition calibration.
-
-Real-time cloth physics and automatic garment fitting are currently outside the scope of the prototype.
-
-## Running locally
-
-Install dependencies:
+## Install
 
 ```bash
-npm install
+pnpm install --frozen-lockfile
 ```
 
-Start the development server:
+## Dev
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-Then open:
+Open `http://localhost:3000`. Model setup is at `/`, tracking is at `/mirror`, and the Pepper's Ghost output is at `/hologram`.
 
-```text
-http://localhost:3000
+## Build
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm build
+pnpm start
 ```
-
-Camera access must be allowed in the browser.
 
 ## Model requirements
 
-For real-time skeletal tracking, imported GLB files should contain:
+Use a web-optimized binary `.glb` containing a humanoid armature and skinned garment. Keep garment and avatar meshes separate when the avatar must be hidden. Use normalized weights, approximately four influences per vertex, compact textures/materials, and bone names matching `src/config/boneMap.ts` or its manual overrides. Static OBJ files cannot receive skeletal tracking without rigging.
 
-- a humanoid armature;
-- a skinned garment;
-- normalized vertex weights;
-- a maximum of approximately four bone influences per vertex;
-- separate garment and avatar meshes where applicable;
-- web-optimized geometry and materials.
+## How to use
 
-Static OBJ files are not suitable for the real-time skeletal workflow without additional rigging.
+1. Select the built-in demo or load a local `.glb` on `/`.
+2. Open `/mirror`, start the camera, stand fully in frame, and hold a neutral pose until calibration completes.
+3. Choose **Make it a hologram** to open the synchronized output window.
+4. Use **F** for fullscreen and **K** for the hidden hologram calibration panel.
+5. Adjust scale, offsets, camera distance, view size, rotations, and flips against the physical display. Calibration persists in that browser.
+
+Debug shortcuts on the mirror are **D** for diagnostics, **A** for avatar visibility, and **C** to recalibrate. Webcam frames and locally loaded models remain in the browser.
 
 ## Deployment
 
-The application is designed to be deployable through Vercel.
+Deploy the repository as a Next.js project on Vercel. No environment variables or server-side services are required. Git-connected deployments build with `pnpm build`; Vercel supplies the HTTPS origin needed for camera access.
 
-Production deployment requires HTTPS for browser camera access.
+## Relevant browser requirements
 
-## Project
-
-Master Digital Design  
-Interaction Design  
-Amsterdam University of Applied Sciences  
-2026
-
-## Author
-
-Bor Dolenc
+Camera access works only on HTTPS origins or `localhost` and requires explicit user permission. Allow popups for the separate hologram window. Both windows must use the same origin for `BroadcastChannel`, localStorage, and IndexedDB synchronization. WebGL and hardware acceleration should be enabled; a current Chromium-based browser is recommended for the exhibition installation.
