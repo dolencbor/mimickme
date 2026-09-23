@@ -36,11 +36,11 @@ pnpm start
 
 ## Model requirements
 
-Use a web-optimized binary `.glb` containing a humanoid armature and skinned garment. Keep garment and avatar meshes separate when the avatar must be hidden. Use normalized weights, approximately four influences per vertex, compact textures/materials, and bone names matching `src/config/boneMap.ts` or its manual overrides. Static OBJ files cannot receive skeletal tracking without rigging.
+The built-in `mimickme-avatar.glb` is the canonical FV2.1 mannequin: an 88-bone humanoid armature with separately skinned avatar and garment meshes. Replacement designs may change clothing geometry and materials, but must preserve its avatar hierarchy and exact bone names from `src/config/boneMap.ts`. Keep garment and avatar meshes separate, normalize weights, and use no more than four bone influences per vertex. Static OBJ files cannot receive skeletal tracking without rigging.
 
 ## How to use
 
-1. Select the built-in demo or load a local `.glb` on `/`.
+1. Select the built-in exhibition avatar or load a compatible `.glb` on `/`.
 2. Open `/mirror`, start the camera, stand fully in frame, and hold a neutral pose until calibration completes.
 3. Choose **Make it a hologram** to open the synchronized output window.
 4. Use **F** for fullscreen and **K** for the hidden hologram calibration panel.

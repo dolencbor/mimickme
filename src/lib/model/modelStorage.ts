@@ -6,10 +6,10 @@ const STORE_NAME = "models";
 const ACTIVE_MODEL_KEY = "fashion-mirror-active-model-v1";
 
 export const BUILT_IN_MODEL_CONFIG: ModelConfiguration = {
-  id: "demo-rigged",
-  label: "Built-in rigged demo",
+  id: "mimickme-avatar-v1",
+  label: "MimickMe exhibition avatar",
   kind: "built-in",
-  url: "/models/demo-rigged.glb",
+  url: "/models/mimickme-avatar.glb",
 };
 
 export type ModelConfiguration = {
@@ -55,6 +55,7 @@ export function getActiveModelConfiguration(): ModelConfiguration {
     if (!stored) return BUILT_IN_MODEL_CONFIG;
     const parsed = JSON.parse(stored) as ModelConfiguration;
     if (!parsed.id || !parsed.label || !parsed.kind) return BUILT_IN_MODEL_CONFIG;
+    if (parsed.kind === "built-in") return BUILT_IN_MODEL_CONFIG;
     return parsed;
   } catch {
     return BUILT_IN_MODEL_CONFIG;
@@ -78,7 +79,7 @@ export async function storeLocalModel(file: File): Promise<ModelConfiguration> {
 
 export async function resolveModelSource(configuration = getActiveModelConfiguration()): Promise<ModelSource> {
   if (configuration.kind === "built-in") {
-    return { ...BUILT_IN_MODEL_CONFIG, ...configuration, url: configuration.url ?? BUILT_IN_MODEL_CONFIG.url } as ModelSource;
+    return { ...BUILT_IN_MODEL_CONFIG } as ModelSource;
   }
 
   const database = await openDatabase();

@@ -102,10 +102,10 @@ export function ModelWorkspace() {
         <div>
           <p className="eyebrow">MODEL SOURCE</p>
           <h2 id="model-setup-title">Load a prepared garment</h2>
-          <p className="muted">Use the rigged demo or inspect a local GLB. Local files stay in this browser.</p>
+          <p className="muted">Use the exhibition avatar or inspect a compatible local GLB. Local files stay in this browser.</p>
         </div>
         <div className="button-row">
-          <button className="button secondary" type="button" onClick={selectBuiltIn}>Use built-in demo</button>
+          <button className="button secondary" type="button" onClick={selectBuiltIn}>Use exhibition avatar</button>
           <label className="button primary">
             Choose local GLB
             <input type="file" accept=".glb,model/gltf-binary" onChange={selectLocal} />

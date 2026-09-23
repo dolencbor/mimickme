@@ -40,8 +40,27 @@ export const BONE_ALIASES: Record<SemanticBone, readonly string[]> = {
   rightFoot: ["Right_Foot", "RightFoot", "mixamorigRightFoot"],
 };
 
-// Add exact GLB bone names here when auto-detection reports an unresolved bone.
-export const MANUAL_BONE_MAP: Partial<Record<SemanticBone, string>> = {};
+// Canonical FV2.1 mannequin hierarchy. Future garment GLBs are expected to retain
+// these avatar bone names while clothing geometry and materials may change.
+export const MANUAL_BONE_MAP: Partial<Record<SemanticBone, string>> = {
+  hips: "Pelvis",
+  spine: "Spine",
+  chest: "Spine3",
+  neck: "Neck",
+  head: "Head",
+  leftUpperArm: "Left_Arm",
+  leftForearm: "Left_ForeArm",
+  leftHand: "Left_Hand",
+  rightUpperArm: "Right_Arm",
+  rightForearm: "Right_ForeArm",
+  rightHand: "Right_Hand",
+  leftUpperLeg: "Left_thigh",
+  leftLowerLeg: "Left_shin",
+  leftFoot: "Left_ankle",
+  rightUpperLeg: "Right_thigh",
+  rightLowerLeg: "Right_shin",
+  rightFoot: "Right_ankle",
+};
 
 export const REQUIRED_MOTION_BONES: readonly SemanticBone[] = [
   "hips",

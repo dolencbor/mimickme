@@ -1,16 +1,18 @@
 "use client";
 
-import { Bounds, useGLTF } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
-import { Bone, Box3, Group, Quaternion, SkeletonHelper, Sphere, Vector3 } from "three";
+import { Bone, Group, Mesh, Quaternion, SkeletonHelper, Sphere, Vector3 } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
 import { collectBones, detectBoneMapping, type BoneMappingReport } from "@/lib/model/boneMapping";
+import { isAvatarMeshName } from "@/lib/model/inspectModel";
+import { getModelBounds } from "@/lib/model/modelBounds";
 import type { SkeletalFrame } from "@/lib/tracking/skeletalFrame";
+import { FittedBounds } from "./FittedBounds";
 
-const AVATAR_PATTERN = /(avatar|body|skin|person|human|head|face)/i;
 const ANIMATION_ORDER: readonly SemanticBone[] = [
   "hips",
   "spine",
@@ -66,11 +68,11 @@ export function ModelController({
   const gltf = useGLTF(url);
   const prepared = useMemo(() => {
     const nextModel = clone(gltf.scene);
-    const bounds = new Box3().setFromObject(nextModel);
+    const bounds = getModelBounds(nextModel);
     const center = bounds.getCenter(new Vector3());
     const radius = bounds.getBoundingSphere(new Sphere()).radius || 1;
     if (centerModel) nextModel.position.sub(center);
-    return { model: nextModel, radius };
+    return { model: nextModel, radius, bounds };
   }, [centerModel, gltf.scene]);
   const model = prepared.model;
   const rig = useMemo(() => {
@@ -102,7 +104,7 @@ export function ModelController({
 
   useEffect(() => {
     model.traverse((object) => {
-      if (object.name && AVATAR_PATTERN.test(object.name)) object.visible = avatarVisible;
+      if (object instanceof Mesh && object.name && isAvatarMeshName(object.name)) object.visible = avatarVisible;
     });
   }, [avatarVisible, model]);
 
@@ -165,5 +167,5 @@ export function ModelController({
     </group>
   );
 
-  return autoFit ? <Bounds fit clip margin={1.3}>{content}</Bounds> : content;
+  return autoFit ? <FittedBounds box={prepared.bounds} margin={1.3}>{content}</FittedBounds> : content;
 }

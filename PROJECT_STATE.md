@@ -24,13 +24,16 @@
 - Phase 9 pauses debug and cursor animation loops while their overlays are hidden, stops calibration polling after completion, and avoids starting skeletal animation work until a mapper exists.
 - Runtime and type dependencies are pinned to exact versions for reproducible installs. Three.js is pinned to `0.182.0`, the last compatible release before the `Clock` deprecation warning surfaced through React Three Fiber.
 - Camera, MediaPipe, object-URL, BroadcastChannel, and animation-frame lifecycles all have explicit cleanup paths. Production camera access is limited to secure contexts (`https://` or localhost).
+- The built-in model is the validated FV2.1 production structure. Future clothing/design variants must preserve its 88-bone avatar hierarchy; runtime mapping is pinned to those exact bone names.
+- `src/lib/model/modelBounds.ts` handles the FV2.1 export's centimeter skeleton root and already-metered skinned vertices, preventing Three.js CPU bounds from framing the rendered avatar 100× too closely without changing bind matrices.
 
 ## Important files
 
 - `src/app/` — routes and global styles.
 - `src/components/model/` — GLB loading, error boundary, inspection, and viewer UI.
 - `src/lib/model/inspectModel.ts` — pure scene validation and name-based avatar/garment classification.
-- `public/models/demo-rigged.glb` — generated built-in development asset.
+- `public/models/mimickme-avatar.glb` — validated canonical exhibition avatar and garment.
+- `public/models/demo-rigged.glb` — generated development fixture; no longer the application default.
 - `scripts/generate-demo-model.mjs` — repeatable demo-asset generator.
 - `src/components/tracking/` — webcam lifecycle, MediaPipe runner, debug canvas, and tracking UI.
 - `src/lib/tracking/` — MediaPipe-independent pose types, processor, calibration profile, `SkeletonMapper`, and explicit tracking state machine.
@@ -71,14 +74,14 @@
 ## Bone mappings
 
 - Runtime mapping uses normalized exact aliases and never silently fuzzy-matches a rig.
-- The built-in demo resolves 15/17 semantic bones. Every required motion bone resolves; optional `Spine` and `Chest` remain unresolved because their GLB nodes are not bones.
-- Rig-specific overrides belong in `MANUAL_BONE_MAP` in `src/config/boneMap.ts`.
+- The built-in FV2.1 mannequin resolves all 17 semantic bones through the exact `MANUAL_BONE_MAP` contract in `src/config/boneMap.ts`.
+- Canonical mappings include `Pelvis`, `Spine`, `Spine3`, limb names such as `Left_Arm`/`Left_ForeArm`, and ankle bones as semantic feet.
 
 ## Unresolved issues
 
-- No production CLO/Blender garment GLB has been supplied or validated yet.
+- The supplied production structure has been validated and installed. Its accidental unskinned `Cloth_SOURCE_BACKUP_CURRENT` export was excluded from the clean built-in GLB.
 - Automated browser runs completed calibration in Phase 3, but sustained full-body movement was not available long enough to visually validate every limb axis and the full root-translation range; confirm with a fully visible standing subject before exhibition use.
-- IndexedDB cross-window support is implemented for local GLBs; validate it with the final production CLO file when supplied.
+- IndexedDB cross-window support remains available for local compatible GLBs.
 - Physical pyramid orientation may require changing the isolated view rotation/flip values during on-site calibration.
 - Final full-body validation should confirm the subjective takeover feel and adjust the centralized 0.75-second blend or 0.9-second loss delay if needed in the exhibition space.
 - Physical Pepper's Ghost hardware is required for final calibration values; the browser currently stores defaults until adjusted on-site.
