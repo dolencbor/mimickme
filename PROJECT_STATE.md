@@ -26,7 +26,7 @@
 - Camera, MediaPipe, object-URL, BroadcastChannel, and animation-frame lifecycles all have explicit cleanup paths. Production camera access is limited to secure contexts (`https://` or localhost).
 - The built-in model is the validated FV2.1 production structure. Future clothing/design variants must preserve its 88-bone avatar hierarchy; runtime mapping is pinned to those exact bone names.
 - `src/lib/model/modelBounds.ts` handles the FV2.1 export's centimeter skeleton root and already-metered skinned vertices, preventing Three.js CPU bounds from framing the rendered avatar 100× too closely without changing bind matrices.
-- All four Pepper's Ghost viewports now default to a vertical flip so the physical hologram reads upright. Calibration storage is versioned to apply the corrected orientation on existing browsers.
+- All four Pepper's Ghost viewports default to a vertical flip, with the top, left, right, and bottom heads oriented toward their respective outside edges. Calibration storage is versioned to apply the corrected orientation on existing browsers.
 
 ## Important files
 

@@ -1,6 +1,6 @@
 import { HOLOGRAM_VIEWS, type HologramViewId } from "@/config/hologram";
 
-const STORAGE_KEY = "fashion-hologram-calibration-v2";
+const STORAGE_KEY = "fashion-hologram-calibration-v3";
 
 export type HologramViewCalibration = {
   rotationDeg: number;
@@ -9,7 +9,7 @@ export type HologramViewCalibration = {
 };
 
 export type HologramCalibration = {
-  version: 2;
+  version: 3;
   scale: number;
   offsetX: number;
   offsetY: number;
@@ -28,7 +28,7 @@ export const HOLOGRAM_CALIBRATION_LIMITS = {
 } as const;
 
 export const DEFAULT_HOLOGRAM_CALIBRATION: HologramCalibration = {
-  version: 2,
+  version: 3,
   scale: 1,
   offsetX: 0,
   offsetY: 0,
@@ -61,10 +61,10 @@ export function readHologramCalibration(): HologramCalibration {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaults;
     const parsed = JSON.parse(raw) as Partial<HologramCalibration>;
-    if (parsed.version !== 2) return defaults;
+    if (parsed.version !== 3) return defaults;
     const parsedViews = parsed.views as Partial<Record<HologramViewId, Partial<HologramViewCalibration>>> | undefined;
     return {
-      version: 2,
+      version: 3,
       scale: finiteNumber(parsed.scale, defaults.scale, HOLOGRAM_CALIBRATION_LIMITS.scale.min, HOLOGRAM_CALIBRATION_LIMITS.scale.max),
       offsetX: finiteNumber(parsed.offsetX, defaults.offsetX, HOLOGRAM_CALIBRATION_LIMITS.offset.min, HOLOGRAM_CALIBRATION_LIMITS.offset.max),
       offsetY: finiteNumber(parsed.offsetY, defaults.offsetY, HOLOGRAM_CALIBRATION_LIMITS.offset.min, HOLOGRAM_CALIBRATION_LIMITS.offset.max),
