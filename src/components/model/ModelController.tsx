@@ -3,7 +3,7 @@
 import { Bounds, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
-import { Bone, Group, Quaternion, SkeletonHelper, Vector3 } from "three";
+import { Bone, Box3, Group, Quaternion, SkeletonHelper, Sphere, Vector3 } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
@@ -37,12 +37,34 @@ type Props = {
   avatarVisible: boolean;
   skeletonVisible: boolean;
   onBoneMap: (report: BoneMappingReport) => void;
+  autoFit?: boolean;
+  centerModel?: boolean;
+  presentationRef?: RefObject<Group | null>;
+  onModelRadius?: (radius: number) => void;
 };
 
-export function ModelController({ url, skeletalFrameRef, avatarVisible, skeletonVisible, onBoneMap }: Props) {
+export function ModelController({
+  url,
+  skeletalFrameRef,
+  avatarVisible,
+  skeletonVisible,
+  onBoneMap,
+  autoFit = true,
+  centerModel = false,
+  presentationRef,
+  onModelRadius,
+}: Props) {
   const rootRef = useRef<Group>(null);
   const gltf = useGLTF(url);
-  const model = useMemo(() => clone(gltf.scene), [gltf.scene]);
+  const prepared = useMemo(() => {
+    const nextModel = clone(gltf.scene);
+    const bounds = new Box3().setFromObject(nextModel);
+    const center = bounds.getCenter(new Vector3());
+    const radius = bounds.getBoundingSphere(new Sphere()).radius || 1;
+    if (centerModel) nextModel.position.sub(center);
+    return { model: nextModel, radius };
+  }, [centerModel, gltf.scene]);
+  const model = prepared.model;
   const rig = useMemo(() => {
     const report = detectBoneMapping(model);
     const allBones = collectBones(model);
@@ -66,6 +88,7 @@ export function ModelController({ url, skeletalFrameRef, avatarVisible, skeleton
   const rootTargetRef = useRef(new Vector3());
 
   useEffect(() => onBoneMap(rig.report), [onBoneMap, rig.report]);
+  useEffect(() => onModelRadius?.(prepared.radius), [onModelRadius, prepared.radius]);
 
   useEffect(() => {
     model.traverse((object) => {
@@ -118,11 +141,13 @@ export function ModelController({ url, skeletalFrameRef, avatarVisible, skeleton
     }
   });
 
-  return (
-    <Bounds fit clip margin={1.3}>
+  const content = (
+    <group ref={presentationRef}>
       <group ref={rootRef}>
         <primitive object={model} />
       </group>
-    </Bounds>
+    </group>
   );
+
+  return autoFit ? <Bounds fit clip margin={1.3}>{content}</Bounds> : content;
 }

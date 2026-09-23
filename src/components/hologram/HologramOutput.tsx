@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useTrackingReceiver } from "@/components/channel/useTrackingReceiver";
-import { TrackedModelViewport } from "@/components/model/TrackedModelViewport";
 import { useResolvedModel } from "@/components/model/useResolvedModel";
+import { FourViewHologram } from "./FourViewHologram";
 
 export function HologramOutput() {
   const { skeletalFrameRef, status, trackingState, model, avatarVisible } = useTrackingReceiver();
   const { source, error: modelError } = useResolvedModel(model);
   const [fullscreenError, setFullscreenError] = useState<string | null>(null);
-  const ignoreBoneReport = useCallback(() => {}, []);
 
   const enterFullscreen = useCallback(async () => {
     try {
@@ -32,20 +31,17 @@ export function HologramOutput() {
   return (
     <main className="hologram-output phase-five-hologram">
       <div className="hologram-preview">
-        <TrackedModelViewport
+        <FourViewHologram
           modelUrl={source.url}
           skeletalFrameRef={skeletalFrameRef}
           avatarVisible={avatarVisible}
-          skeletonVisible={false}
-          onBoneMap={ignoreBoneReport}
-          backgroundColor="#000000"
         />
       </div>
 
       <header className="hologram-controls">
         <div>
-          <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 5</p>
-          <h1>Live synchronized preview</h1>
+          <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 6</p>
+          <h1>Four-view hologram</h1>
         </div>
         <div className="button-row">
           <button className="button primary" type="button" onClick={enterFullscreen}>Enter fullscreen</button>
