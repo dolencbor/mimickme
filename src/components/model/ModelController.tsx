@@ -8,9 +8,7 @@ import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
 import { collectBones, detectBoneMapping, type BoneMappingReport } from "@/lib/model/boneMapping";
-import { SkeletonMapper } from "@/lib/tracking/SkeletonMapper";
-import type { CalibrationProfile } from "@/lib/tracking/calibration";
-import type { PoseFrame } from "@/lib/tracking/types";
+import type { SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 
 const AVATAR_PATTERN = /(avatar|body|skin|person|human|head|face)/i;
 const ANIMATION_ORDER: readonly SemanticBone[] = [
@@ -35,14 +33,13 @@ const ANIMATION_ORDER: readonly SemanticBone[] = [
 
 type Props = {
   url: string;
-  poseFrameRef: RefObject<PoseFrame>;
-  calibration: CalibrationProfile | null;
+  skeletalFrameRef: RefObject<SkeletalFrame>;
   avatarVisible: boolean;
   skeletonVisible: boolean;
   onBoneMap: (report: BoneMappingReport) => void;
 };
 
-export function ModelController({ url, poseFrameRef, calibration, avatarVisible, skeletonVisible, onBoneMap }: Props) {
+export function ModelController({ url, skeletalFrameRef, avatarVisible, skeletonVisible, onBoneMap }: Props) {
   const rootRef = useRef<Group>(null);
   const gltf = useGLTF(url);
   const model = useMemo(() => clone(gltf.scene), [gltf.scene]);
@@ -60,7 +57,6 @@ export function ModelController({ url, poseFrameRef, calibration, avatarVisible,
     }
     return { report, targets, restRotations };
   }, [model]);
-  const mapper = useMemo(() => calibration ? new SkeletonMapper(calibration) : null, [calibration]);
   const frameQuaternions = useMemo(() => ({
     deltaWorld: new Quaternion(),
     parentWorld: new Quaternion(),
@@ -89,28 +85,16 @@ export function ModelController({ url, poseFrameRef, calibration, avatarVisible,
   }, [model, skeletonVisible]);
 
   useFrame((_, deltaSeconds) => {
-    const frame = poseFrameRef.current;
-    const bonePose = mapper?.map(frame);
+    const frame = skeletalFrameRef.current;
     const smoothing = 1 - Math.exp(-TRACKING_CONFIG.rotationSmoothingSpeed * deltaSeconds);
     const rootSmoothing = 1 - Math.exp(-TRACKING_CONFIG.positionSmoothingSpeed * deltaSeconds);
 
     const rootTarget = rootTargetRef.current;
-    rootTarget.set(0, 0, 0);
-    const neutralCenter = calibration?.neutralPose.bodyCenter;
-    if (frame.trackingActive && frame.bodyCenter && neutralCenter) {
-      rootTarget.x = Math.max(
-        -TRACKING_CONFIG.rootHorizontalLimit,
-        Math.min(TRACKING_CONFIG.rootHorizontalLimit, -(frame.bodyCenter.x - neutralCenter.x) * TRACKING_CONFIG.rootHorizontalScale),
-      );
-      rootTarget.y = Math.max(
-        -TRACKING_CONFIG.rootVerticalLimit,
-        Math.min(TRACKING_CONFIG.rootVerticalLimit, (neutralCenter.y - frame.bodyCenter.y) * TRACKING_CONFIG.rootVerticalScale),
-      );
-    }
+    rootTarget.fromArray(frame.trackingActive ? frame.rootPosition : [0, 0, 0]);
     rootRef.current?.position.lerp(rootTarget, rootSmoothing);
 
     for (const semantic of ANIMATION_ORDER) {
-      const rotation = bonePose?.rotations[semantic];
+      const rotation = frame.rotations[semantic];
       const bones = rig.targets[semantic];
       if (!bones) continue;
       for (const bone of bones) {

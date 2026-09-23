@@ -3,7 +3,7 @@
 ## Architecture
 
 - Next.js 16 App Router application with React 19, TypeScript, Three.js, React Three Fiber, and Drei.
-- `/` owns model selection, validation, inspection, and the Phase 1 viewer; `/mirror` owns live tracking, calibration, and rig control; `/hologram` remains a route placeholder.
+- `/` owns model selection, validation, inspection, and the Phase 1 viewer; `/mirror` owns live tracking/calibration; `/hologram` receives processed motion without camera or MediaPipe.
 - Local `.glb` files use a short-lived object URL and never leave the browser.
 - Pure model inspection lives outside the R3F viewer; transient 3D controls update the cloned Three.js scene directly.
 - `/mirror` owns the webcam and MediaPipe Pose Landmarker lifecycle. Raw results are converted to `PoseFrame` immediately and stored in a mutable ref.
@@ -12,6 +12,9 @@
 - The model controller auto-detects exact bone aliases, preserves rest rotations, converts world-space deltas into each bone's parent space, and applies frame-rate-independent quaternion smoothing.
 - Phase 4 keeps pose data unmirrored while mirroring only camera/cursor presentation. Calibrated hip-center deltas drive restrained, clamped, smoothed model-root translation.
 - Exhibition mode removes developer chrome while preserving camera startup and recalibration; keyboard fallbacks are `D` debug, `A` avatar, and `C` recalibrate.
+- One `SkeletalFrame` ref now feeds both the mirror model and the cross-window transmitter. Per-frame quaternions/root motion never enter React state.
+- `fashion-hologram-tracking` uses a versioned `BroadcastChannel` protocol with receiver hello/goodbye heartbeats, compact skeletal snapshots, connection timeouts, model configuration, tracking state, and avatar visibility.
+- Active model configuration is stored in localStorage; local GLB blobs are persisted in IndexedDB and resolved to short-lived object URLs independently in each window.
 
 ## Important files
 
@@ -26,6 +29,10 @@
 - `src/config/boneMap.ts` — semantic bone names, common aliases, and `MANUAL_BONE_MAP` overrides.
 - `src/config/tracking.ts` — confidence, timing, inference, WASM, and model configuration.
 - `src/lib/tracking/handCursor.ts` — left/right wrist conversion into mirrored normalized cursor coordinates.
+- `src/lib/tracking/skeletalFrame.ts` and `src/components/tracking/useSkeletalMotion.ts` — processed cross-window motion state.
+- `src/lib/channel/trackingChannel.ts` and `src/components/channel/` — versioned BroadcastChannel protocol and lifecycle hooks.
+- `src/lib/model/modelStorage.ts` — built-in/local model persistence and per-window resolution.
+- `src/components/hologram/HologramOutput.tsx` — synchronized single-view Phase 5 output and fullscreen control.
 
 ## Completed phases
 
@@ -37,6 +44,8 @@
 - Checks: TypeScript, ESLint, production build, WebGL model render, live GPU inference (~25 FPS), 38-frame neutral calibration, auto-mapping, avatar/skeleton debug toggles, and browser error-overlay checks pass.
 - Phase 4 — Smart Mirror: complete.
 - Checks: TypeScript, ESLint, production build, exact desktop 50/50 split, responsive/exhibition layouts, webcam readiness, GPU inference (~25 FPS), model/avatar isolation, debug controls, hand selection, keyboard controls, and browser console/error-overlay checks pass.
+- Phase 5 — Cross-Window System: complete.
+- Checks: TypeScript, ESLint, production build, popup launch, bidirectional channel handshake, mirror connection status, black WebGL hologram preview, built-in model configuration, fullscreen action, zero hologram video/camera elements, zero MediaPipe assets in the hologram document, and browser console/error-overlay checks pass.
 
 ## Bone mappings
 
@@ -50,4 +59,5 @@
 - Drei/R3F currently emits a harmless Three.js `Clock` deprecation warning from dependency code; revisit during Phase 9 hardening.
 - MediaPipe emits internal WebGL/projection warnings while inference remains operational; revisit during Phase 9 hardening.
 - Automated browser runs completed calibration in Phase 3, but sustained full-body movement was not available long enough to visually validate every limb axis and the full root-translation range; confirm with a fully visible standing subject before exhibition use.
-- Next phase: Phase 5 — Cross-Window System.
+- IndexedDB cross-window support is implemented for local GLBs; validate it with the final production CLO file when supplied.
+- Next phase: Phase 6 — Four-View Hologram.

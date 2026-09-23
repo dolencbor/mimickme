@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
+import {
+  BUILT_IN_MODEL_CONFIG,
+  getActiveModelConfiguration,
+  resolveModelSource,
+  setActiveModelConfiguration,
+  storeLocalModel,
+} from "@/lib/model/modelStorage";
 import type { ModelReport, ModelSource } from "@/lib/model/types";
 import { ModelInspector } from "./ModelInspector";
 import { ModelViewer } from "./ModelViewer";
-
-const BUILT_IN_MODEL: ModelSource = {
-  id: "demo-rigged",
-  label: "Built-in rigged demo",
-  url: "/models/demo-rigged.glb",
-  kind: "built-in",
-};
 
 function hasWebGL() {
   try {
@@ -24,7 +24,7 @@ function hasWebGL() {
 }
 
 export function ModelWorkspace() {
-  const [source, setSource] = useState<ModelSource>(BUILT_IN_MODEL);
+  const [source, setSource] = useState<ModelSource>({ ...BUILT_IN_MODEL_CONFIG } as ModelSource);
   const [report, setReport] = useState<ModelReport | null>(null);
   const [avatarVisible, setAvatarVisible] = useState(true);
   const [skeletonVisible, setSkeletonVisible] = useState(false);
@@ -32,8 +32,23 @@ export function ModelWorkspace() {
   const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
+    let active = true;
     const frame = window.requestAnimationFrame(() => setWebGLAvailable(hasWebGL()));
+    resolveModelSource(getActiveModelConfiguration())
+      .then((resolved) => {
+        if (!active) {
+          if (resolved.kind === "local") URL.revokeObjectURL(resolved.url);
+          return;
+        }
+        if (resolved.kind === "local") objectUrlRef.current = resolved.url;
+        setSource(resolved);
+      })
+      .catch(() => {
+        setActiveModelConfiguration(BUILT_IN_MODEL_CONFIG);
+        setSource({ ...BUILT_IN_MODEL_CONFIG } as ModelSource);
+      });
     return () => {
+      active = false;
       window.cancelAnimationFrame(frame);
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     };
@@ -43,10 +58,11 @@ export function ModelWorkspace() {
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     objectUrlRef.current = null;
     setReport(null);
-    setSource(BUILT_IN_MODEL);
+    setActiveModelConfiguration(BUILT_IN_MODEL_CONFIG);
+    setSource({ ...BUILT_IN_MODEL_CONFIG } as ModelSource);
   }, []);
 
-  const selectLocal = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+  const selectLocal = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
@@ -54,11 +70,16 @@ export function ModelWorkspace() {
       window.alert("Choose a binary .glb file.");
       return;
     }
-    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    const url = URL.createObjectURL(file);
-    objectUrlRef.current = url;
-    setReport(null);
-    setSource({ id: `${file.name}-${file.lastModified}`, label: file.name, url, kind: "local" });
+    try {
+      const configuration = await storeLocalModel(file);
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      const url = URL.createObjectURL(file);
+      objectUrlRef.current = url;
+      setReport(null);
+      setSource({ ...configuration, url } as ModelSource);
+    } catch {
+      window.alert("The local model could not be stored in this browser.");
+    }
   }, []);
 
   const handleInspect = useCallback((nextReport: ModelReport) => setReport(nextReport), []);

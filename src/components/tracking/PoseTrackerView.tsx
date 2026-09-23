@@ -2,8 +2,15 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useTrackingTransmitter } from "@/components/channel/useTrackingTransmitter";
 import { TrackedModelViewport } from "@/components/model/TrackedModelViewport";
+import { useResolvedModel } from "@/components/model/useResolvedModel";
 import type { BoneMappingReport } from "@/lib/model/boneMapping";
+import {
+  BUILT_IN_MODEL_CONFIG,
+  getActiveModelConfiguration,
+  type ModelConfiguration,
+} from "@/lib/model/modelStorage";
 import type { CursorHand } from "@/lib/tracking/handCursor";
 import { TRACKED_JOINTS, TrackingState } from "@/lib/tracking/types";
 import { CalibrationStatus } from "./CalibrationStatus";
@@ -11,6 +18,7 @@ import { HandCursorOverlay } from "./HandCursorOverlay";
 import { PoseLandmarkOverlay } from "./PoseLandmarkOverlay";
 import { useCalibration } from "./useCalibration";
 import { usePoseTracker } from "./usePoseTracker";
+import { useSkeletalMotion } from "./useSkeletalMotion";
 
 const STATE_LABEL: Record<TrackingState, string> = {
   [TrackingState.NO_PERSON]: "No person",
@@ -37,6 +45,8 @@ export function PoseTrackerView() {
   const [exhibitionMode, setExhibitionMode] = useState(false);
   const [cursorHand, setCursorHand] = useState<CursorHand>("RIGHT");
   const [boneReport, setBoneReport] = useState<BoneMappingReport | null>(null);
+  const [modelConfiguration, setModelConfiguration] = useState<ModelConfiguration>(BUILT_IN_MODEL_CONFIG);
+  const [popupBlocked, setPopupBlocked] = useState(false);
   const { stage: calibrationStage, profile: calibrationProfile, recalibrate } = useCalibration({
     trackerPhase: phase,
     trackingState,
@@ -44,8 +54,21 @@ export function PoseTrackerView() {
     setCalibrating,
   });
   const handleBoneMap = useCallback((report: BoneMappingReport) => setBoneReport(report), []);
+  const { source: modelSource, error: modelError } = useResolvedModel(modelConfiguration);
+  const skeletalFrameRef = useSkeletalMotion(poseFrameRef, calibrationProfile);
+  const channelStatus = useTrackingTransmitter({
+    skeletalFrameRef,
+    trackingState,
+    model: modelConfiguration,
+    avatarVisible,
+  });
   const isRunning = phase === "running";
   const isBusy = phase === "initializing";
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setModelConfiguration(getActiveModelConfiguration()));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -65,16 +88,23 @@ export function PoseTrackerView() {
     setExhibitionMode(true);
   };
 
+  const openHologram = () => {
+    const outputWindow = window.open("/hologram", "fashion-hologram", "popup,width=1000,height=1000");
+    setPopupBlocked(!outputWindow);
+    outputWindow?.focus();
+  };
+
   return (
     <main className={`tracking-page ${exhibitionMode ? "exhibition-mode" : ""}`}>
       <header className="tracking-header">
         {!exhibitionMode ? (
           <div>
-            <p className="eyebrow">SMART MIRROR / PHASE 4</p>
+            <p className="eyebrow">SMART MIRROR / PHASE 5</p>
             <h1>Live garment mirror</h1>
           </div>
         ) : <span className={`exhibition-status ${trackingState.toLowerCase()}`}>{STATE_LABEL[trackingState]}</span>}
         <div className="tracking-actions">
+          {!exhibitionMode ? <span className={`channel-status ${channelStatus}`}>OUTPUT {channelStatus}</span> : null}
           {!exhibitionMode ? (
             <>
               <label className="debug-toggle">
@@ -97,6 +127,7 @@ export function PoseTrackerView() {
           {!exhibitionMode ? (
             <>
               <button className="button secondary" type="button" onClick={enterExhibitionMode}>Exhibition mode</button>
+              <button className="button primary" type="button" onClick={openHologram}>Make it a hologram</button>
               <Link className="button secondary" href="/">Model setup</Link>
             </>
           ) : <button className="button secondary exhibition-exit" type="button" onClick={() => setExhibitionMode(false)}>Exit exhibition</button>}
@@ -119,13 +150,13 @@ export function PoseTrackerView() {
 
         <div className="tracked-model-shell">
           <TrackedModelViewport
-            poseFrameRef={poseFrameRef}
-            calibration={calibrationProfile}
+            modelUrl={modelSource.url}
+            skeletalFrameRef={skeletalFrameRef}
             avatarVisible={avatarVisible}
             skeletonVisible={skeletonVisible}
             onBoneMap={handleBoneMap}
           />
-          <div className="camera-badge">Tracked model · Built-in demo</div>
+          <div className="camera-badge">Tracked model · {modelSource.label}</div>
           <div className="mirror-calibration-overlay">
             <CalibrationStatus
               stage={calibrationStage}
@@ -149,12 +180,16 @@ export function PoseTrackerView() {
           </div>
 
           {error ? <p className="tracking-error" role="alert">{error}</p> : null}
+          {modelError ? <p className="tracking-error" role="alert">{modelError}</p> : null}
+          {popupBlocked ? <p className="tracking-error" role="alert">Popup blocked. Allow popups, then try again.</p> : null}
 
           <dl className="metrics tracking-metrics">
             <div><dt>Inference FPS</dt><dd>{diagnostics.fps.toFixed(1)}</dd></div>
             <div><dt>Confidence</dt><dd>{Math.round(diagnostics.confidence * 100)}%</dd></div>
             <div><dt>Backend</dt><dd>{diagnostics.backend ?? "—"}</dd></div>
             <div><dt>People</dt><dd>{diagnostics.people}</dd></div>
+            <div><dt>Channel</dt><dd>{channelStatus}</dd></div>
+            <div><dt>Model</dt><dd>{modelSource.kind}</dd></div>
           </dl>
 
           <div className="debug-controls">
