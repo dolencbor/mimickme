@@ -40,6 +40,8 @@ type Props = {
   autoFit?: boolean;
   centerModel?: boolean;
   presentationRef?: RefObject<Group | null>;
+  presentationScale?: number;
+  presentationOffset?: [number, number, number];
   motionRef?: RefObject<Group | null>;
   trackingInfluenceRef?: RefObject<number>;
   onModelRadius?: (radius: number) => void;
@@ -54,6 +56,8 @@ export function ModelController({
   autoFit = true,
   centerModel = false,
   presentationRef,
+  presentationScale = 1,
+  presentationOffset = [0, 0, 0],
   motionRef,
   trackingInfluenceRef,
   onModelRadius,
@@ -152,7 +156,7 @@ export function ModelController({
   });
 
   const content = (
-    <group ref={presentationRef}>
+    <group ref={presentationRef} scale={presentationScale} position={presentationOffset}>
       <group ref={motionRef}>
         <group ref={rootRef}>
           <primitive object={model} />

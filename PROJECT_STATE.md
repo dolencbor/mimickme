@@ -19,6 +19,8 @@
 - Camera azimuth/elevation/distance, model rotation offset, viewport rotation, and flips are isolated in `src/config/hologram.ts`; model bounds drive shared camera auto-framing.
 - Hologram idle motion and tracking takeover run entirely in the R3F frame loop. A reusable `trackingInfluence` ref blends the cached live pose/root from 0–1 while a separate presentation transform handles slow Y rotation and sinusoidal float.
 - Tracking takeover lasts 0.75 seconds. Tracking loss holds the last valid pose for 0.9 seconds before blending smoothly back to rest and idle motion; all timings and amplitudes are centralized in `src/config/hologram.ts`.
+- Phase 8 adds a hidden `K`-key calibration panel. It adjusts model scale and XYZ offsets, shared camera distance, rendered view size, and each view's rotation/horizontal flip/vertical flip without source edits.
+- Hologram calibration uses a validated, clamped, versioned localStorage schema. Changes persist immediately, malformed or outdated data falls back safely, and reset removes the override and restores the Phase 6 orientation table.
 
 ## Important files
 
@@ -37,6 +39,8 @@
 - `src/lib/channel/trackingChannel.ts` and `src/components/channel/` — versioned BroadcastChannel protocol and lifecycle hooks.
 - `src/lib/model/modelStorage.ts` — built-in/local model persistence and per-window resolution.
 - `src/components/hologram/HologramOutput.tsx`, `FourViewHologram.tsx`, and `HologramMotionController.tsx` — synchronized four-view output, idle/takeover blending, custom camera renderer, and fullscreen control.
+- `src/components/hologram/HologramCalibrationPanel.tsx` and `useHologramCalibration.ts` — hidden calibration controls and persistent client state.
+- `src/lib/hologram/calibration.ts` — calibration schema, bounds, defaults, validation, persistence, and reset.
 - `src/config/hologram.ts` — physical-view orientation, motion, transition, and performance/framing defaults.
 
 ## Completed phases
@@ -55,6 +59,8 @@
 - Checks: TypeScript, ESLint, production build, one-canvas/four-camera rendering, distinct cross-layout cells, centered square stage, pure-black background, model-bound auto-framing, popup handshake regression, and browser console/error-overlay checks pass.
 - Phase 7 — Idle + Takeover: complete.
 - Checks: TypeScript, ESLint, production build, visible four-view idle transform, separated per-view and shared-motion transforms, mirror connection regression, and browser console/error-overlay checks pass. The transition controller preserves the last tracked pose through the loss delay and blends pose/root influence in both directions without React state updates per frame.
+- Phase 8 — Hologram Calibration: complete.
+- Checks: TypeScript, ESLint, production build, hidden keyboard toggle, live global/per-view control updates, persistence across reload, complete reset, responsive panel layout, and browser console/error-overlay checks pass.
 
 ## Bone mappings
 
@@ -71,4 +77,5 @@
 - IndexedDB cross-window support is implemented for local GLBs; validate it with the final production CLO file when supplied.
 - Physical pyramid orientation may require changing the isolated view rotation/flip values during on-site calibration.
 - Final full-body validation should confirm the subjective takeover feel and adjust the centralized 0.75-second blend or 0.9-second loss delay if needed in the exhibition space.
-- Next phase: Phase 8 — Hologram Calibration.
+- Physical Pepper's Ghost hardware is required for final calibration values; the browser currently stores defaults until adjusted on-site.
+- Next phase: Phase 9 — Harden + Deploy.

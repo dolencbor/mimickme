@@ -5,11 +5,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useTrackingReceiver } from "@/components/channel/useTrackingReceiver";
 import { useResolvedModel } from "@/components/model/useResolvedModel";
 import { FourViewHologram } from "./FourViewHologram";
+import { HologramCalibrationPanel } from "./HologramCalibrationPanel";
+import { useHologramCalibration } from "./useHologramCalibration";
 
 export function HologramOutput() {
   const { skeletalFrameRef, status, trackingState, model, avatarVisible } = useTrackingReceiver();
   const { source, error: modelError } = useResolvedModel(model);
   const [fullscreenError, setFullscreenError] = useState<string | null>(null);
+  const [calibrationOpen, setCalibrationOpen] = useState(false);
+  const { calibration, updateCalibration, resetCalibration } = useHologramCalibration();
 
   const enterFullscreen = useCallback(async () => {
     try {
@@ -23,6 +27,8 @@ export function HologramOutput() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === "f" && !event.repeat) void enterFullscreen();
+      if (event.key.toLowerCase() === "k" && !event.repeat) setCalibrationOpen((current) => !current);
+      if (event.key === "Escape") setCalibrationOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -36,13 +42,14 @@ export function HologramOutput() {
           skeletalFrameRef={skeletalFrameRef}
           trackingState={trackingState}
           avatarVisible={avatarVisible}
+          calibration={calibration}
         />
       </div>
 
       <header className="hologram-controls">
         <div>
-          <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 7</p>
-          <h1>Idle + takeover</h1>
+          <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 8</p>
+          <h1>Calibrated hologram</h1>
         </div>
         <div className="button-row">
           <button className="button primary" type="button" onClick={enterFullscreen}>Enter fullscreen</button>
@@ -57,6 +64,14 @@ export function HologramOutput() {
         <span>{trackingState === "TRACKING" ? "Live takeover" : "Idle motion"}</span>
         <span>{source.label}</span>
       </div>
+      {calibrationOpen ? (
+        <HologramCalibrationPanel
+          calibration={calibration}
+          onChange={updateCalibration}
+          onClose={() => setCalibrationOpen(false)}
+          onReset={resetCalibration}
+        />
+      ) : null}
       {modelError ? <p className="hologram-error" role="alert">{modelError}</p> : null}
       {fullscreenError ? <p className="hologram-error" role="alert">{fullscreenError}</p> : null}
     </main>

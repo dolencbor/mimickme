@@ -9,33 +9,37 @@ import { ModelController } from "@/components/model/ModelController";
 import { ModelErrorBoundary } from "@/components/model/ModelErrorBoundary";
 import type { SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import type { TrackingState } from "@/lib/tracking/types";
+import type { HologramCalibration } from "@/lib/hologram/calibration";
 
 type Props = {
   modelUrl: string;
   skeletalFrameRef: RefObject<SkeletalFrame>;
   trackingState: TrackingState;
   avatarVisible: boolean;
+  calibration: HologramCalibration;
 };
 
 type RendererProps = {
   presentationRef: RefObject<Group | null>;
   modelRadius: number;
+  calibration: HologramCalibration;
 };
 
-function FourCameraRenderer({ presentationRef, modelRadius }: RendererProps) {
+function FourCameraRenderer({ presentationRef, modelRadius, calibration }: RendererProps) {
   const { gl, scene, size } = useThree();
   const lookAt = useMemo(() => new Vector3(0, 0, 0), []);
   const camerasRef = useRef(HOLOGRAM_VIEWS.map(() => new PerspectiveCamera(HOLOGRAM_RENDER_CONFIG.cameraFovDeg, 1, 0.01, 100)));
 
   useFrame(() => {
-    const tile = Math.min(size.width, size.height) / 3;
-    const horizontalOffset = (size.width - tile * 3) / 2;
-    const verticalOffset = (size.height - tile * 3) / 2;
+    const cellSize = Math.min(size.width, size.height) / 3;
+    const tile = cellSize * calibration.viewSize;
+    const horizontalOffset = (size.width - cellSize * 3) / 2;
+    const verticalOffset = (size.height - cellSize * 3) / 2;
     const halfFovRadians = MathUtils.degToRad(HOLOGRAM_RENDER_CONFIG.cameraFovDeg / 2);
     const baseDistance = Math.max(
       HOLOGRAM_RENDER_CONFIG.minimumCameraDistance,
       (modelRadius / Math.sin(halfFovRadians)) * HOLOGRAM_RENDER_CONFIG.framingMargin,
-    );
+    ) * calibration.cameraDistance;
 
     gl.setScissorTest(false);
     gl.setViewport(0, 0, size.width, size.height);
@@ -49,18 +53,19 @@ function FourCameraRenderer({ presentationRef, modelRadius }: RendererProps) {
       const azimuth = MathUtils.degToRad(view.cameraAzimuthDeg);
       const elevation = MathUtils.degToRad(view.cameraElevationDeg);
       const distance = baseDistance * view.cameraDistanceMultiplier;
+      const viewCalibration = calibration.views[view.id];
       const planarDistance = Math.cos(elevation) * distance;
       camera.position.set(Math.sin(azimuth) * planarDistance, Math.sin(elevation) * distance, Math.cos(azimuth) * planarDistance);
       camera.up.set(0, 1, 0);
       camera.lookAt(lookAt);
-      camera.rotateZ(MathUtils.degToRad(view.viewportRotationDeg));
+      camera.rotateZ(MathUtils.degToRad(viewCalibration.rotationDeg));
       camera.updateProjectionMatrix();
-      camera.projectionMatrix.elements[0] *= view.horizontalFlip ? -1 : 1;
-      camera.projectionMatrix.elements[5] *= view.verticalFlip ? -1 : 1;
+      camera.projectionMatrix.elements[0] *= viewCalibration.horizontalFlip ? -1 : 1;
+      camera.projectionMatrix.elements[5] *= viewCalibration.verticalFlip ? -1 : 1;
 
       if (presentationRef.current) presentationRef.current.rotation.y = MathUtils.degToRad(view.modelRotationOffsetDeg);
-      const x = horizontalOffset + (view.gridColumn - 1) * tile;
-      const y = verticalOffset + (3 - view.gridRow) * tile;
+      const x = horizontalOffset + (view.gridColumn - 1) * cellSize + (cellSize - tile) / 2;
+      const y = verticalOffset + (3 - view.gridRow) * cellSize + (cellSize - tile) / 2;
       gl.setViewport(x, y, tile, tile);
       gl.setScissor(x, y, tile, tile);
       gl.render(scene, camera);
@@ -73,7 +78,7 @@ function FourCameraRenderer({ presentationRef, modelRadius }: RendererProps) {
   return null;
 }
 
-export function FourViewHologram({ modelUrl, skeletalFrameRef, trackingState, avatarVisible }: Props) {
+export function FourViewHologram({ modelUrl, skeletalFrameRef, trackingState, avatarVisible, calibration }: Props) {
   const viewRotationRef = useRef<Group>(null);
   const motionRef = useRef<Group>(null);
   const trackingInfluenceRef = useRef(0);
@@ -108,11 +113,13 @@ export function FourViewHologram({ modelUrl, skeletalFrameRef, trackingState, av
               autoFit={false}
               centerModel
               presentationRef={viewRotationRef}
+              presentationScale={calibration.scale}
+              presentationOffset={[calibration.offsetX, calibration.offsetY, calibration.offsetZ]}
               motionRef={motionRef}
               trackingInfluenceRef={trackingInfluenceRef}
               onModelRadius={handleRadius}
             />
-            <FourCameraRenderer presentationRef={viewRotationRef} modelRadius={modelRadius} />
+            <FourCameraRenderer presentationRef={viewRotationRef} modelRadius={modelRadius} calibration={calibration} />
           </Canvas>
         </Suspense>
       </ModelErrorBoundary>
