@@ -37,6 +37,7 @@
 - Vercel Web Interface Guidelines polish groups mirror status/visibility separately from primary actions, improves compact and mobile wrapping, adds consistent keyboard focus treatment and live-region status announcements, respects safe areas and reduced-motion preferences, and keeps diagnostics numerically aligned without changing runtime behavior.
 - Model, mirror, and hologram routes share one fixed, route-aware three-item navigation control. Page-specific camera and fullscreen actions remain in separate toolbars so navigation geometry and order stay stable between screens.
 - Hologram output initializes from the browser's cached active model before a mirror connects. Versioned calibration resets stale zoom values, and camera fitting accounts for presentation scale so the complete avatar remains inside every default hologram tile.
+- The four hologram cameras use a tighter safe-fit margin so each avatar fills substantially more of its available tile while remaining fully visible. Orientation labels sit vertically on each tile's right edge, parallel to the feed edge and clear of the model.
 
 ## Important files
 

@@ -182,7 +182,7 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 .hologram-stage { position: relative; width: min(100vw, 100vh); height: min(100vw, 100vh); background: #000; }
 .hologram-stage > div, .hologram-stage canvas { width: 100% !important; height: 100% !important; }
 .hologram-view-labels { position: absolute; inset: 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); pointer-events: none; }
-.hologram-view-labels span { align-self: end; justify-self: center; margin-bottom: 8px; color: #383838; font-size: clamp(.5rem, .8vw, .7rem); font-weight: 700; letter-spacing: .16em; }
+.hologram-view-labels span { align-self: center; justify-self: end; margin-right: 8px; color: #383838; font-size: clamp(.5rem, .8vw, .7rem); font-weight: 700; letter-spacing: .16em; line-height: 1; text-orientation: mixed; writing-mode: vertical-rl; }
 .hologram-controls { position: fixed; top: 20px; right: 20px; left: 20px; z-index: 10; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; pointer-events: none; }
 .hologram-controls > * { pointer-events: auto; }
 .hologram-controls h1 { margin: 4px 0 0; font-size: clamp(1.3rem, 3vw, 2.4rem); font-weight: 500; letter-spacing: -.03em; }

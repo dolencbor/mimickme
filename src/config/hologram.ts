@@ -72,7 +72,7 @@ export const HOLOGRAM_VIEWS: readonly HologramViewConfig[] = [
 
 export const HOLOGRAM_RENDER_CONFIG = {
   cameraFovDeg: 34,
-  framingMargin: 1.6,
+  framingMargin: 1.15,
   minimumCameraDistance: 1.5,
   maxPixelRatio: 1.25,
 } as const;
