@@ -18,16 +18,15 @@ type Props = {
   trackingState: TrackingState;
   model: ModelConfiguration;
   avatarVisible: boolean;
-  garmentVisible: boolean;
 };
 
-export function useTrackingTransmitter({ skeletalFrameRef, trackingState, model, avatarVisible, garmentVisible }: Props) {
+export function useTrackingTransmitter({ skeletalFrameRef, trackingState, model, avatarVisible }: Props) {
   const [status, setStatus] = useState<ChannelConnectionStatus>("waiting");
-  const stateRef = useRef({ trackingState, model, avatarVisible, garmentVisible });
+  const stateRef = useRef({ trackingState, model, avatarVisible });
 
   useEffect(() => {
-    stateRef.current = { trackingState, model, avatarVisible, garmentVisible };
-  }, [avatarVisible, garmentVisible, model, trackingState]);
+    stateRef.current = { trackingState, model, avatarVisible };
+  }, [avatarVisible, model, trackingState]);
 
   useEffect(() => {
     if (!supportsTrackingChannel()) {
@@ -75,7 +74,6 @@ export function useTrackingTransmitter({ skeletalFrameRef, trackingState, model,
           skeletalFrame: frame,
           model: current.model,
           avatarVisible: current.avatarVisible,
-          garmentVisible: current.garmentVisible,
         };
         channel.postMessage(snapshot);
         lastFrameTimestamp = frame.timestamp;

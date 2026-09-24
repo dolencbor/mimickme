@@ -8,7 +8,7 @@ import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
 import { collectBones, detectBoneMapping, type BoneMappingReport } from "@/lib/model/boneMapping";
-import { isAvatarMeshName, isGarmentMeshName } from "@/lib/model/inspectModel";
+import { isAvatarMeshName } from "@/lib/model/inspectModel";
 import { getModelBounds } from "@/lib/model/modelBounds";
 import { hasUsableSkeletalMotion, type SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import { FittedBounds } from "./FittedBounds";
@@ -19,11 +19,9 @@ const ANIMATION_ORDER: readonly SemanticBone[] = [
   "chest",
   "neck",
   "head",
-  "leftShoulder",
   "leftUpperArm",
   "leftForearm",
   "leftHand",
-  "rightShoulder",
   "rightUpperArm",
   "rightForearm",
   "rightHand",
@@ -39,7 +37,6 @@ type Props = {
   url: string;
   skeletalFrameRef: RefObject<SkeletalFrame>;
   avatarVisible: boolean;
-  garmentVisible: boolean;
   skeletonVisible: boolean;
   onBoneMap: (report: BoneMappingReport) => void;
   autoFit?: boolean;
@@ -56,7 +53,6 @@ export function ModelController({
   url,
   skeletalFrameRef,
   avatarVisible,
-  garmentVisible,
   skeletonVisible,
   onBoneMap,
   autoFit = true,
@@ -84,29 +80,19 @@ export function ModelController({
     const allBones = collectBones(model);
     const targets: Partial<Record<SemanticBone, Bone[]>> = {};
     const restRotations = new Map<Bone, Quaternion>();
-    const restModelSpaceRotations = new Map<Bone, Quaternion>();
-    const modelWorldInverse = new Quaternion();
-    const boneWorld = new Quaternion();
-    model.updateMatrixWorld(true);
-    model.getWorldQuaternion(modelWorldInverse).invert();
     for (const semantic of SEMANTIC_BONES) {
       const boneName = report.mapping[semantic];
       if (!boneName) continue;
       const matches = allBones.filter((bone) => bone.name === boneName);
       if (matches.length > 0) targets[semantic] = matches;
-      matches.forEach((bone) => {
-        restRotations.set(bone, bone.quaternion.clone());
-        bone.getWorldQuaternion(boneWorld);
-        restModelSpaceRotations.set(bone, modelWorldInverse.clone().multiply(boneWorld));
-      });
+      matches.forEach((bone) => restRotations.set(bone, bone.quaternion.clone()));
     }
-    return { report, targets, restRotations, restModelSpaceRotations };
+    return { report, targets, restRotations };
   }, [model]);
   const frameQuaternions = useMemo(() => ({
     deltaWorld: new Quaternion(),
     parentWorld: new Quaternion(),
-    modelWorld: new Quaternion(),
-    desiredWorld: new Quaternion(),
+    localDelta: new Quaternion(),
     trackedTarget: new Quaternion(),
     target: new Quaternion(),
   }), []);
@@ -118,11 +104,9 @@ export function ModelController({
 
   useEffect(() => {
     model.traverse((object) => {
-      if (!(object instanceof Mesh) || !object.name) return;
-      if (isGarmentMeshName(object.name)) object.visible = garmentVisible;
-      else if (isAvatarMeshName(object.name)) object.visible = avatarVisible;
+      if (object instanceof Mesh && object.name && isAvatarMeshName(object.name)) object.visible = avatarVisible;
     });
-  }, [avatarVisible, garmentVisible, model]);
+  }, [avatarVisible, model]);
 
   useEffect(() => {
     if (!skeletonVisible) return;
@@ -141,20 +125,12 @@ export function ModelController({
     if (trackingInfluenceRef && hasTrackedMotion) lastTrackedFrameRef.current = frame;
     const motionFrame = trackingInfluenceRef ? (hasTrackedMotion ? frame : lastTrackedFrameRef.current) : frame;
     const trackingInfluence = trackingInfluenceRef ? trackingInfluenceRef.current : 1;
+    const smoothing = 1 - Math.exp(-TRACKING_CONFIG.rotationSmoothingSpeed * deltaSeconds);
+    const rootSmoothing = 1 - Math.exp(-TRACKING_CONFIG.positionSmoothingSpeed * deltaSeconds);
+
     const rootTarget = rootTargetRef.current;
     rootTarget.fromArray(motionFrame?.rootPosition ?? [0, 0, 0]).multiplyScalar(trackingInfluence);
-    if (rootRef.current) {
-      const positionResponse = Math.min(
-        1,
-        rootRef.current.position.distanceTo(rootTarget) / TRACKING_CONFIG.positionResponseDistance,
-      );
-      const positionSpeed = TRACKING_CONFIG.positionSmoothingMinSpeed +
-        (TRACKING_CONFIG.positionSmoothingMaxSpeed - TRACKING_CONFIG.positionSmoothingMinSpeed) * positionResponse;
-      rootRef.current.position.lerp(rootTarget, 1 - Math.exp(-positionSpeed * deltaSeconds));
-    }
-
-    model.updateWorldMatrix(true, true);
-    model.getWorldQuaternion(frameQuaternions.modelWorld);
+    rootRef.current?.position.lerp(rootTarget, rootSmoothing);
 
     for (const semantic of ANIMATION_ORDER) {
       const rotation = motionFrame?.rotations[semantic];
@@ -162,33 +138,21 @@ export function ModelController({
       if (!bones) continue;
       for (const bone of bones) {
         const rest = rig.restRotations.get(bone);
-        const restModelSpace = rig.restModelSpaceRotations.get(bone);
-        if (!rest || !restModelSpace) continue;
+        if (!rest) continue;
         frameQuaternions.target.copy(rest);
         if (rotation && motionFrame?.trackingActive) {
           frameQuaternions.deltaWorld.fromArray(rotation);
-          frameQuaternions.desiredWorld
-            .copy(frameQuaternions.modelWorld)
+          if (bone.parent) bone.parent.getWorldQuaternion(frameQuaternions.parentWorld);
+          else frameQuaternions.parentWorld.identity();
+          frameQuaternions.localDelta
+            .copy(frameQuaternions.parentWorld)
+            .invert()
             .multiply(frameQuaternions.deltaWorld)
-            .multiply(restModelSpace);
-          if (bone.parent) {
-            bone.parent.getWorldQuaternion(frameQuaternions.parentWorld);
-            frameQuaternions.trackedTarget
-              .copy(frameQuaternions.parentWorld)
-              .invert()
-              .multiply(frameQuaternions.desiredWorld);
-          } else {
-            frameQuaternions.trackedTarget.copy(frameQuaternions.desiredWorld);
-          }
+            .multiply(frameQuaternions.parentWorld);
+          frameQuaternions.trackedTarget.copy(frameQuaternions.localDelta).multiply(rest);
           frameQuaternions.target.slerpQuaternions(rest, frameQuaternions.trackedTarget, trackingInfluence);
         }
-        const rotationResponse = Math.min(
-          1,
-          bone.quaternion.angleTo(frameQuaternions.target) / TRACKING_CONFIG.rotationResponseAngle,
-        );
-        const rotationSpeed = TRACKING_CONFIG.rotationSmoothingMinSpeed +
-          (TRACKING_CONFIG.rotationSmoothingMaxSpeed - TRACKING_CONFIG.rotationSmoothingMinSpeed) * rotationResponse;
-        bone.quaternion.slerp(frameQuaternions.target, 1 - Math.exp(-rotationSpeed * deltaSeconds));
+        bone.quaternion.slerp(frameQuaternions.target, smoothing);
         bone.updateWorldMatrix(true, false);
       }
     }

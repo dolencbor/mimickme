@@ -9,7 +9,7 @@ import { HologramCalibrationPanel } from "./HologramCalibrationPanel";
 import { useHologramCalibration } from "./useHologramCalibration";
 
 export function HologramOutput() {
-  const { skeletalFrameRef, status, trackingState, model, avatarVisible, garmentVisible } = useTrackingReceiver();
+  const { skeletalFrameRef, status, trackingState, model, avatarVisible } = useTrackingReceiver();
   const { source, error: modelError } = useResolvedModel(model);
   const [fullscreenError, setFullscreenError] = useState<string | null>(null);
   const [calibrationOpen, setCalibrationOpen] = useState(false);
@@ -44,7 +44,6 @@ export function HologramOutput() {
           skeletalFrameRef={skeletalFrameRef}
           trackingState={trackingState}
           avatarVisible={avatarVisible}
-          garmentVisible={garmentVisible}
           calibration={calibration}
         />
       </div>

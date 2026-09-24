@@ -4,7 +4,7 @@ import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
 import { useEffect, useMemo } from "react";
 import { Mesh, SkeletonHelper, type Object3D } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { inspectModel, isAvatarMeshName, isGarmentMeshName } from "@/lib/model/inspectModel";
+import { inspectModel, isAvatarMeshName } from "@/lib/model/inspectModel";
 import { getModelBounds } from "@/lib/model/modelBounds";
 import type { ModelReport } from "@/lib/model/types";
 import { FittedBounds } from "./FittedBounds";
@@ -12,12 +12,11 @@ import { FittedBounds } from "./FittedBounds";
 type Props = {
   url: string;
   avatarVisible: boolean;
-  garmentVisible: boolean;
   skeletonVisible: boolean;
   onInspect: (report: ModelReport) => void;
 };
 
-export function ModelScene({ url, avatarVisible, garmentVisible, skeletonVisible, onInspect }: Props) {
+export function ModelScene({ url, avatarVisible, skeletonVisible, onInspect }: Props) {
   const gltf = useGLTF(url);
   const model = useMemo(() => clone(gltf.scene), [gltf.scene]);
   const bounds = useMemo(() => getModelBounds(model), [model]);
@@ -27,11 +26,9 @@ export function ModelScene({ url, avatarVisible, garmentVisible, skeletonVisible
 
   useEffect(() => {
     model.traverse((object) => {
-      if (!(object instanceof Mesh) || !object.name) return;
-      if (isGarmentMeshName(object.name)) object.visible = garmentVisible;
-      else if (isAvatarMeshName(object.name)) object.visible = avatarVisible;
+      if (object instanceof Mesh && object.name && isAvatarMeshName(object.name)) object.visible = avatarVisible;
     });
-  }, [avatarVisible, garmentVisible, model]);
+  }, [avatarVisible, model]);
 
   useEffect(() => {
     if (!skeletonVisible) return;

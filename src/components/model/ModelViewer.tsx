@@ -9,7 +9,6 @@ import { ModelScene } from "./ModelScene";
 type Props = {
   url: string;
   avatarVisible: boolean;
-  garmentVisible: boolean;
   skeletonVisible: boolean;
   onInspect: (report: ModelReport) => void;
 };

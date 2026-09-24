@@ -14,34 +14,6 @@ import type { PoseFrame } from "@/lib/tracking/types";
 
 const clamp = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value));
 
-function imageSpan(frame: PoseFrame, leftName: "leftShoulder" | "leftHip", rightName: "rightShoulder" | "rightHip") {
-  const left = frame.joints[leftName];
-  const right = frame.joints[rightName];
-  if (!left || !right) return null;
-  if (left.confidence < TRACKING_CONFIG.confidenceThreshold || right.confidence < TRACKING_CONFIG.confidenceThreshold) {
-    return null;
-  }
-  return Math.hypot(left.image.x - right.image.x, left.image.y - right.image.y);
-}
-
-function apparentBodyScale(frame: PoseFrame, neutral: PoseFrame) {
-  let ratioTotal = 0;
-  let ratioCount = 0;
-  const currentShoulders = imageSpan(frame, "leftShoulder", "rightShoulder");
-  const neutralShoulders = imageSpan(neutral, "leftShoulder", "rightShoulder");
-  if (currentShoulders && neutralShoulders) {
-    ratioTotal += currentShoulders / neutralShoulders;
-    ratioCount += 1;
-  }
-  const currentHips = imageSpan(frame, "leftHip", "rightHip");
-  const neutralHips = imageSpan(neutral, "leftHip", "rightHip");
-  if (currentHips && neutralHips) {
-    ratioTotal += currentHips / neutralHips;
-    ratioCount += 1;
-  }
-  return ratioCount > 0 ? ratioTotal / ratioCount : 1;
-}
-
 export function useSkeletalMotion(poseFrameRef: RefObject<PoseFrame>, calibration: CalibrationProfile | null) {
   const skeletalFrameRef = useRef<SkeletalFrame>({ ...EMPTY_SKELETAL_FRAME });
   const mapper = useMemo(() => calibration ? new SkeletonMapper(calibration) : null, [calibration]);
@@ -68,10 +40,6 @@ export function useSkeletalMotion(poseFrameRef: RefObject<PoseFrame>, calibratio
           rootPosition[1] = clamp(
             (neutralCenter.y - poseFrame.bodyCenter.y) * TRACKING_CONFIG.rootVerticalScale,
             TRACKING_CONFIG.rootVerticalLimit,
-          );
-          rootPosition[2] = clamp(
-            (apparentBodyScale(poseFrame, calibration.neutralPose) - 1) * TRACKING_CONFIG.rootDepthScale,
-            TRACKING_CONFIG.rootDepthLimit,
           );
         }
         const bonePose = mapper.map(poseFrame);

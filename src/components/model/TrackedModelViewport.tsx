@@ -12,7 +12,6 @@ type Props = {
   modelUrl: string;
   skeletalFrameRef: RefObject<SkeletalFrame>;
   avatarVisible: boolean;
-  garmentVisible: boolean;
   skeletonVisible: boolean;
   onBoneMap: (report: BoneMappingReport) => void;
   backgroundColor?: string;

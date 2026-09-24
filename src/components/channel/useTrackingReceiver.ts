@@ -20,7 +20,6 @@ export function useTrackingReceiver() {
   const [trackingState, setTrackingState] = useState(TrackingState.NO_PERSON);
   const [model, setModel] = useState<ModelConfiguration>(BUILT_IN_MODEL_CONFIG);
   const [avatarVisible, setAvatarVisible] = useState(true);
-  const [garmentVisible, setGarmentVisible] = useState(true);
 
   useEffect(() => {
     if (!supportsTrackingChannel()) {
@@ -33,7 +32,6 @@ export function useTrackingReceiver() {
     let currentStatus: ChannelConnectionStatus = "waiting";
     let currentTrackingState = TrackingState.NO_PERSON;
     let currentAvatarVisible = true;
-    let currentGarmentVisible = true;
     let currentModel = BUILT_IN_MODEL_CONFIG;
     const sayHello = () => {
       const message: HologramHello = {
@@ -60,10 +58,6 @@ export function useTrackingReceiver() {
       if (currentAvatarVisible !== event.data.avatarVisible) {
         currentAvatarVisible = event.data.avatarVisible;
         setAvatarVisible(event.data.avatarVisible);
-      }
-      if (currentGarmentVisible !== event.data.garmentVisible) {
-        currentGarmentVisible = event.data.garmentVisible;
-        setGarmentVisible(event.data.garmentVisible);
       }
       if (currentModel.id !== event.data.model.id || currentModel.kind !== event.data.model.kind) {
         currentModel = event.data.model;
@@ -98,5 +92,5 @@ export function useTrackingReceiver() {
     };
   }, []);
 
-  return { skeletalFrameRef, status, trackingState, model, avatarVisible, garmentVisible };
+  return { skeletalFrameRef, status, trackingState, model, avatarVisible };
 }

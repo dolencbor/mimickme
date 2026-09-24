@@ -3,7 +3,7 @@ import type { SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import type { TrackingState } from "@/lib/tracking/types";
 
 export const TRACKING_CHANNEL_NAME = "fashion-hologram-tracking";
-export const TRACKING_CHANNEL_VERSION = 2;
+export const TRACKING_CHANNEL_VERSION = 1;
 
 export type ChannelConnectionStatus = "unsupported" | "waiting" | "connected";
 
@@ -15,7 +15,6 @@ export type TrackingSnapshot = {
   skeletalFrame: SkeletalFrame;
   model: ModelConfiguration;
   avatarVisible: boolean;
-  garmentVisible: boolean;
 };
 
 export type HologramHello = {
