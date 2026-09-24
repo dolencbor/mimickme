@@ -30,6 +30,7 @@
 - Skeletal motion is confidence-gated per body segment. Visible limbs and torso regions can move independently, while off-camera or low-confidence regions return to their neutral pose until their required landmarks are reliable again.
 - Hologram control is keyed to usable live skeletal motion, not only the coarse tracking status. It smoothly blends from idle rotation/float into the camera-driven pose, briefly holds through tracking dropouts, and blends back to idle when usable motion is absent.
 - Calibration can begin from any reliable tracked segment rather than requiring the full body. Each limb segment moves only when its required landmark pair is visible; missing segments return to rest, and body parts absent during initial calibration learn a neutral direction when first detected.
+- Avatar and clothes visibility are independently controllable in model setup and the live mirror. Both states propagate to the four-view hologram through the versioned tracking channel; `A` toggles the avatar and `G` toggles clothes.
 
 ## Important files
 

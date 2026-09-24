@@ -16,6 +16,7 @@ type Props = {
   skeletalFrameRef: RefObject<SkeletalFrame>;
   trackingState: TrackingState;
   avatarVisible: boolean;
+  garmentVisible: boolean;
   calibration: HologramCalibration;
 };
 
@@ -78,7 +79,7 @@ function FourCameraRenderer({ presentationRef, modelRadius, calibration }: Rende
   return null;
 }
 
-export function FourViewHologram({ modelUrl, skeletalFrameRef, trackingState, avatarVisible, calibration }: Props) {
+export function FourViewHologram({ modelUrl, skeletalFrameRef, trackingState, avatarVisible, garmentVisible, calibration }: Props) {
   const viewRotationRef = useRef<Group>(null);
   const motionRef = useRef<Group>(null);
   const trackingInfluenceRef = useRef(0);
@@ -109,6 +110,7 @@ export function FourViewHologram({ modelUrl, skeletalFrameRef, trackingState, av
               url={modelUrl}
               skeletalFrameRef={skeletalFrameRef}
               avatarVisible={avatarVisible}
+              garmentVisible={garmentVisible}
               skeletonVisible={false}
               onBoneMap={ignoreBoneReport}
               autoFit={false}

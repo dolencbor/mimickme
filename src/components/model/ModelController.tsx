@@ -8,7 +8,7 @@ import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
 import { collectBones, detectBoneMapping, type BoneMappingReport } from "@/lib/model/boneMapping";
-import { isAvatarMeshName } from "@/lib/model/inspectModel";
+import { isAvatarMeshName, isGarmentMeshName } from "@/lib/model/inspectModel";
 import { getModelBounds } from "@/lib/model/modelBounds";
 import { hasUsableSkeletalMotion, type SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import { FittedBounds } from "./FittedBounds";
@@ -37,6 +37,7 @@ type Props = {
   url: string;
   skeletalFrameRef: RefObject<SkeletalFrame>;
   avatarVisible: boolean;
+  garmentVisible: boolean;
   skeletonVisible: boolean;
   onBoneMap: (report: BoneMappingReport) => void;
   autoFit?: boolean;
@@ -53,6 +54,7 @@ export function ModelController({
   url,
   skeletalFrameRef,
   avatarVisible,
+  garmentVisible,
   skeletonVisible,
   onBoneMap,
   autoFit = true,
@@ -104,9 +106,11 @@ export function ModelController({
 
   useEffect(() => {
     model.traverse((object) => {
-      if (object instanceof Mesh && object.name && isAvatarMeshName(object.name)) object.visible = avatarVisible;
+      if (!(object instanceof Mesh) || !object.name) return;
+      if (isGarmentMeshName(object.name)) object.visible = garmentVisible;
+      else if (isAvatarMeshName(object.name)) object.visible = avatarVisible;
     });
-  }, [avatarVisible, model]);
+  }, [avatarVisible, garmentVisible, model]);
 
   useEffect(() => {
     if (!skeletonVisible) return;

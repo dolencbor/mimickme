@@ -41,6 +41,7 @@ export function PoseTrackerView() {
   } = usePoseTracker();
   const [debugVisible, setDebugVisible] = useState(false);
   const [avatarVisible, setAvatarVisible] = useState(true);
+  const [garmentVisible, setGarmentVisible] = useState(true);
   const [skeletonVisible, setSkeletonVisible] = useState(false);
   const [exhibitionMode, setExhibitionMode] = useState(false);
   const [cursorHand, setCursorHand] = useState<CursorHand>("RIGHT");
@@ -61,6 +62,7 @@ export function PoseTrackerView() {
     trackingState,
     model: modelConfiguration,
     avatarVisible,
+    garmentVisible,
   });
   const isRunning = phase === "running";
   const isBusy = phase === "initializing";
@@ -76,6 +78,7 @@ export function PoseTrackerView() {
       if (event.repeat || target?.matches("input, textarea, select")) return;
       if (event.key.toLowerCase() === "d") setDebugVisible((visible) => !visible);
       if (event.key.toLowerCase() === "a") setAvatarVisible((visible) => !visible);
+      if (event.key.toLowerCase() === "g") setGarmentVisible((visible) => !visible);
       if (event.key.toLowerCase() === "c") recalibrate();
     };
     window.addEventListener("keydown", onKeyDown);
@@ -115,6 +118,10 @@ export function PoseTrackerView() {
                 <input type="checkbox" checked={avatarVisible} onChange={(event) => setAvatarVisible(event.target.checked)} />
                 AVATAR
               </label>
+              <label className="debug-toggle">
+                <input type="checkbox" checked={garmentVisible} onChange={(event) => setGarmentVisible(event.target.checked)} />
+                CLOTHES
+              </label>
             </>
           ) : null}
           {isRunning ? (
@@ -153,6 +160,7 @@ export function PoseTrackerView() {
             modelUrl={modelSource.url}
             skeletalFrameRef={skeletalFrameRef}
             avatarVisible={avatarVisible}
+            garmentVisible={garmentVisible}
             skeletonVisible={skeletonVisible}
             onBoneMap={handleBoneMap}
           />
@@ -203,7 +211,7 @@ export function PoseTrackerView() {
                 <button key={hand} type="button" aria-pressed={cursorHand === hand} onClick={() => setCursorHand(hand)}>{hand}</button>
               ))}
             </div>
-            <p className="shortcut-note">D debug · A avatar · C recalibrate</p>
+            <p className="shortcut-note">D debug · A avatar · G clothes · C recalibrate</p>
           </div>
 
           <div className="tracked-joints">
