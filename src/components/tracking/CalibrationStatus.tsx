@@ -22,7 +22,7 @@ type Props = {
 
 export function CalibrationStatus({ stage, profile, boneReport, onRecalibrate, showDebugDetails = false }: Props) {
   return (
-    <section className={`calibration-status ${stage.toLowerCase()}`}>
+    <section className={`calibration-status ${stage.toLowerCase()}`} aria-live="polite">
       <div>
         <p className="eyebrow">CALIBRATION</p>
         <h3>{STAGE_COPY[stage]}</h3>

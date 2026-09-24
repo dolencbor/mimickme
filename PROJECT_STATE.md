@@ -34,6 +34,7 @@
 - The tracking solver directly controls only 12 major anatomical bones. Every target is recalculated from the cached GLB bind pose, converted from tracker/model space into the current parent-local space, and smoothed without changing bone position or scale. Intermediate/helper bones remain at bind-local transforms and inherit movement through the rig hierarchy.
 - The setup, smart-mirror, diagnostics, and calibration UI use a light Coss-inspired token system with crisp opaque borders, subtle bottom shadows, compact cards, badges, and accessible switch controls. Geist Sans is self-hosted for interface text and Geist Mono is reserved for technical values; the physical hologram projection canvas intentionally remains black.
 - Model viewports retain the same black stage as the camera feed for consistent contrast. The mirror camera card lists available video inputs after permission is granted and can replace the active webcam without rebuilding the MediaPipe landmarker; hologram presentation and calibration styling remain unchanged.
+- Vercel Web Interface Guidelines polish groups mirror status/visibility separately from primary actions, improves compact and mobile wrapping, adds consistent keyboard focus treatment and live-region status announcements, respects safe areas and reduced-motion preferences, and keeps diagnostics numerically aligned without changing runtime behavior.
 
 ## Important files
 

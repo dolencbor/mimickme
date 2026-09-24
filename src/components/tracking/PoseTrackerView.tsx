@@ -114,35 +114,37 @@ export function PoseTrackerView() {
           </div>
         ) : <span className={`exhibition-status ${trackingState.toLowerCase()}`}>{STATE_LABEL[trackingState]}</span>}
         <div className="tracking-actions">
-          {!exhibitionMode ? <span className={`channel-status ${channelStatus}`}>OUTPUT {channelStatus}</span> : null}
           {!exhibitionMode ? (
-            <>
+            <div className="tracking-control-group">
+              <span className={`channel-status ${channelStatus}`} aria-live="polite">OUTPUT {channelStatus}</span>
               <div className="header-switches">
                 <SwitchControl compact label="Debug" checked={debugVisible} onChange={setDebugVisible} />
                 <SwitchControl compact label="Avatar" checked={avatarVisible} onChange={setAvatarVisible} />
                 <SwitchControl compact label="Clothes" checked={garmentVisible} onChange={setGarmentVisible} />
               </div>
-            </>
+            </div>
           ) : null}
-          {isRunning ? (
-            !exhibitionMode ? <button className="button secondary" type="button" onClick={stop}>Stop camera</button> : null
-          ) : (
-            <button className="button primary" type="button" onClick={start} disabled={isBusy}>
-              {isBusy ? "Starting…" : "Start camera"}
-            </button>
-          )}
-          {!exhibitionMode ? (
-            <>
+          <div className="tracking-button-group">
+            {isRunning ? (
+              !exhibitionMode ? <button className="button secondary" type="button" onClick={stop}>Stop camera</button> : null
+            ) : (
+              <button className="button primary" type="button" onClick={start} disabled={isBusy}>
+                {isBusy ? "Starting…" : "Start camera"}
+              </button>
+            )}
+            {!exhibitionMode ? (
+              <>
               <button className="button secondary" type="button" onClick={enterExhibitionMode}>Exhibition mode</button>
               <button className="button primary" type="button" onClick={openHologram}>Make it a hologram</button>
               <Link className="button secondary" href="/">Model setup</Link>
-            </>
-          ) : <button className="button secondary exhibition-exit" type="button" onClick={() => setExhibitionMode(false)}>Exit exhibition</button>}
+              </>
+            ) : <button className="button secondary exhibition-exit" type="button" onClick={() => setExhibitionMode(false)}>Exit exhibition</button>}
+          </div>
         </div>
       </header>
 
-      <section className="tracking-layout">
-        <div className="camera-shell studio-card">
+      <section className="tracking-layout" aria-label="Live camera and tracked avatar">
+        <div className="camera-shell studio-card" aria-label="Camera preview">
           <video ref={videoRef} className="camera-feed" autoPlay muted playsInline />
           <PoseLandmarkOverlay enabled={debugVisible && isRunning} poseFrameRef={poseFrameRef} videoRef={videoRef} />
           <HandCursorOverlay enabled={debugVisible && isRunning} hand={cursorHand} poseFrameRef={poseFrameRef} />
@@ -169,7 +171,7 @@ export function PoseTrackerView() {
           <div className="camera-badge">Mirrored preview</div>
         </div>
 
-        <div className="tracked-model-shell studio-card">
+        <div className="tracked-model-shell studio-card" aria-label="Tracked avatar preview">
           <TrackedModelViewport
             modelUrl={modelSource.url}
             skeletalFrameRef={skeletalFrameRef}

@@ -98,7 +98,7 @@ export function ModelWorkspace() {
           </div>
         </div>
         <nav aria-label="Primary routes">
-          <Link className="nav-link active" href="/">Model</Link>
+          <Link className="nav-link active" href="/" aria-current="page">Model</Link>
           <Link className="nav-link" href="/mirror">Mirror</Link>
           <Link className="nav-link" href="/hologram">Hologram</Link>
         </nav>
@@ -123,14 +123,14 @@ export function ModelWorkspace() {
       {!webGLAvailable ? (
         <div className="fatal-error" role="alert">WebGL is unavailable. Enable hardware acceleration or use a WebGL-capable browser.</div>
       ) : (
-        <section className="model-layout">
-          <div className="viewer-shell">
+        <section className="model-layout" aria-label="Model preview and inspection">
+          <div className="viewer-shell" aria-label="Interactive model preview">
             <div className="viewer-toolbar">
               <div className="viewer-title">
                 <span className="status-dot" />
                 <span>{source.kind === "local" ? "Local model" : "Exhibition avatar"}</span>
               </div>
-              <div className="toggle-group">
+            <div className="toggle-group" aria-label="Model visibility">
                 <SwitchControl compact label="Avatar" checked={avatarVisible} onChange={setAvatarVisible} />
                 <SwitchControl compact label="Clothes" checked={garmentVisible} onChange={setGarmentVisible} />
                 <SwitchControl compact label="Skeleton" checked={skeletonVisible} onChange={setSkeletonVisible} />
