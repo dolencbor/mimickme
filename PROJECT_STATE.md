@@ -32,6 +32,7 @@
 - Calibration can begin from any reliable tracked segment rather than requiring the full body. Each limb segment moves only when its required landmark pair is visible; missing segments return to rest, and body parts absent during initial calibration learn a neutral direction when first detected.
 - Avatar and clothes visibility are independently controllable in model setup and the live mirror. Both states propagate to the four-view hologram through the versioned tracking channel; `A` toggles the avatar and `G` toggles clothes.
 - The tracking solver directly controls only 12 major anatomical bones. Every target is recalculated from the cached GLB bind pose, converted from tracker/model space into the current parent-local space, and smoothed without changing bone position or scale. Intermediate/helper bones remain at bind-local transforms and inherit movement through the rig hierarchy.
+- The setup, smart-mirror, diagnostics, and calibration UI use a light Coss-inspired token system with crisp opaque borders, subtle bottom shadows, compact cards, badges, and accessible switch controls. Geist Sans is self-hosted for interface text and Geist Mono is reserved for technical values; the physical hologram projection canvas intentionally remains black.
 
 ## Important files
 

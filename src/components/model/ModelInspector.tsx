@@ -15,6 +15,7 @@ export function ModelInspector({ source, report }: Props) {
           <h2>{source.label}</h2>
         </div>
         <span className={`status-chip ${errors.length ? "invalid" : "valid"}`}>
+          <span className="status-dot" />
           {!report ? "Inspecting" : errors.length ? "Needs attention" : "Valid"}
         </span>
       </div>

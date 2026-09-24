@@ -22,7 +22,7 @@ export function ModelViewer(props: Props) {
           camera={{ fov: 36, position: [0, 1.2, 4] }}
           dpr={[1, 1.75]}
           gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-          onCreated={({ gl }) => gl.setClearColor("#111111")}
+          onCreated={({ gl }) => gl.setClearColor("#f1f1ef")}
         >
           <ModelScene {...props} />
         </Canvas>

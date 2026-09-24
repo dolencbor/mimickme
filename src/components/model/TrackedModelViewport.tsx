@@ -18,7 +18,7 @@ type Props = {
   backgroundColor?: string;
 };
 
-export function TrackedModelViewport({ modelUrl, backgroundColor = "#111111", ...props }: Props) {
+export function TrackedModelViewport({ modelUrl, backgroundColor = "#f1f1ef", ...props }: Props) {
   return (
     <div className="tracked-model-canvas">
       <ModelErrorBoundary resetKey={modelUrl}>

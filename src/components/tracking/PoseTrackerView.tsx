@@ -14,6 +14,7 @@ import {
 import type { CursorHand } from "@/lib/tracking/handCursor";
 import { TRACKED_JOINTS, TrackingState } from "@/lib/tracking/types";
 import { CalibrationStatus } from "./CalibrationStatus";
+import { SwitchControl } from "@/components/ui/SwitchControl";
 import { HandCursorOverlay } from "./HandCursorOverlay";
 import { PoseLandmarkOverlay } from "./PoseLandmarkOverlay";
 import { useCalibration } from "./useCalibration";
@@ -101,27 +102,23 @@ export function PoseTrackerView() {
     <main className={`tracking-page ${exhibitionMode ? "exhibition-mode" : ""}`}>
       <header className="tracking-header">
         {!exhibitionMode ? (
-          <div>
-            <p className="eyebrow">SMART MIRROR / PHASE 5</p>
-            <h1>Live garment mirror</h1>
+          <div className="brand-lockup">
+            <span className="brand-mark" aria-hidden="true">M</span>
+            <div>
+              <p className="eyebrow">MIMICKME / LIVE STUDIO</p>
+              <h1>Live garment mirror</h1>
+            </div>
           </div>
         ) : <span className={`exhibition-status ${trackingState.toLowerCase()}`}>{STATE_LABEL[trackingState]}</span>}
         <div className="tracking-actions">
           {!exhibitionMode ? <span className={`channel-status ${channelStatus}`}>OUTPUT {channelStatus}</span> : null}
           {!exhibitionMode ? (
             <>
-              <label className="debug-toggle">
-                <input type="checkbox" checked={debugVisible} onChange={(event) => setDebugVisible(event.target.checked)} />
-                DEBUG
-              </label>
-              <label className="debug-toggle">
-                <input type="checkbox" checked={avatarVisible} onChange={(event) => setAvatarVisible(event.target.checked)} />
-                AVATAR
-              </label>
-              <label className="debug-toggle">
-                <input type="checkbox" checked={garmentVisible} onChange={(event) => setGarmentVisible(event.target.checked)} />
-                CLOTHES
-              </label>
+              <div className="header-switches">
+                <SwitchControl compact label="Debug" checked={debugVisible} onChange={setDebugVisible} />
+                <SwitchControl compact label="Avatar" checked={avatarVisible} onChange={setAvatarVisible} />
+                <SwitchControl compact label="Clothes" checked={garmentVisible} onChange={setGarmentVisible} />
+              </div>
             </>
           ) : null}
           {isRunning ? (
@@ -142,7 +139,7 @@ export function PoseTrackerView() {
       </header>
 
       <section className="tracking-layout">
-        <div className="camera-shell">
+        <div className="camera-shell studio-card">
           <video ref={videoRef} className="camera-feed" autoPlay muted playsInline />
           <PoseLandmarkOverlay enabled={debugVisible && isRunning} poseFrameRef={poseFrameRef} videoRef={videoRef} />
           <HandCursorOverlay enabled={debugVisible && isRunning} hand={cursorHand} poseFrameRef={poseFrameRef} />
@@ -155,7 +152,7 @@ export function PoseTrackerView() {
           <div className="camera-badge">Mirrored preview</div>
         </div>
 
-        <div className="tracked-model-shell">
+        <div className="tracked-model-shell studio-card">
           <TrackedModelViewport
             modelUrl={modelSource.url}
             skeletalFrameRef={skeletalFrameRef}
@@ -201,15 +198,13 @@ export function PoseTrackerView() {
           </dl>
 
           <div className="debug-controls">
-            <label className="debug-toggle">
-              <input
-                type="checkbox"
-                checked={debugVisible || skeletonVisible}
-                disabled={debugVisible}
-                onChange={(event) => setSkeletonVisible(event.target.checked)}
-              />
-              SKELETON
-            </label>
+            <SwitchControl
+              compact
+              label="Skeleton"
+              checked={debugVisible || skeletonVisible}
+              disabled={debugVisible}
+              onChange={setSkeletonVisible}
+            />
             <div className="hand-selector" aria-label="Active hand cursor">
               <span>CURSOR</span>
               {(["LEFT", "RIGHT"] as const).map((hand) => (

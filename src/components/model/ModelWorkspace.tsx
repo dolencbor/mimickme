@@ -11,6 +11,7 @@ import {
   storeLocalModel,
 } from "@/lib/model/modelStorage";
 import type { ModelReport, ModelSource } from "@/lib/model/types";
+import { SwitchControl } from "@/components/ui/SwitchControl";
 import { ModelInspector } from "./ModelInspector";
 import { ModelViewer } from "./ModelViewer";
 
@@ -89,20 +90,25 @@ export function ModelWorkspace() {
   return (
     <main className="workspace">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">EXHIBITION PROTOTYPE / PHASE 1</p>
-          <h1>Digital Garment Mirror</h1>
+        <div className="brand-lockup">
+          <span className="brand-mark" aria-hidden="true">M</span>
+          <div>
+            <p className="eyebrow">MIMICKME / MODEL STUDIO</p>
+            <h1>Digital garment mirror</h1>
+          </div>
         </div>
         <nav aria-label="Primary routes">
-          <Link href="/mirror">Mirror</Link>
-          <Link href="/hologram">Hologram</Link>
+          <Link className="nav-link active" href="/">Model</Link>
+          <Link className="nav-link" href="/mirror">Mirror</Link>
+          <Link className="nav-link" href="/hologram">Hologram</Link>
         </nav>
       </header>
 
       <section className="setup-panel" aria-labelledby="model-setup-title">
         <div>
+          <span className="section-icon" aria-hidden="true">01</span>
           <p className="eyebrow">MODEL SOURCE</p>
-          <h2 id="model-setup-title">Load a prepared garment</h2>
+          <h2 id="model-setup-title">Choose your avatar</h2>
           <p className="muted">Use the exhibition avatar or inspect a compatible local GLB. Local files stay in this browser.</p>
         </div>
         <div className="button-row">
@@ -120,11 +126,14 @@ export function ModelWorkspace() {
         <section className="model-layout">
           <div className="viewer-shell">
             <div className="viewer-toolbar">
-              <span>{source.kind === "local" ? "LOCAL MODEL" : "BUILT-IN MODEL"}</span>
+              <div className="viewer-title">
+                <span className="status-dot" />
+                <span>{source.kind === "local" ? "Local model" : "Exhibition avatar"}</span>
+              </div>
               <div className="toggle-group">
-                <label><input type="checkbox" checked={avatarVisible} onChange={(event) => setAvatarVisible(event.target.checked)} /> AVATAR</label>
-                <label><input type="checkbox" checked={garmentVisible} onChange={(event) => setGarmentVisible(event.target.checked)} /> CLOTHES</label>
-                <label><input type="checkbox" checked={skeletonVisible} onChange={(event) => setSkeletonVisible(event.target.checked)} /> SKELETON</label>
+                <SwitchControl compact label="Avatar" checked={avatarVisible} onChange={setAvatarVisible} />
+                <SwitchControl compact label="Clothes" checked={garmentVisible} onChange={setGarmentVisible} />
+                <SwitchControl compact label="Skeleton" checked={skeletonVisible} onChange={setSkeletonVisible} />
               </div>
             </div>
             <div className="viewer-canvas">
@@ -144,7 +153,7 @@ export function ModelWorkspace() {
       )}
 
       <footer className="phase-footer">
-        <span>{isValid ? "Model validation passed" : "Waiting for a valid model"}</span>
+        <span className={`footer-status ${isValid ? "valid" : ""}`}><span className="status-dot" />{isValid ? "Model validation passed" : "Waiting for a valid model"}</span>
         <Link className={`button primary ${isValid ? "" : "disabled"}`} href={isValid ? "/mirror" : "#"} aria-disabled={!isValid}>
           Enter Smart Mirror
         </Link>
