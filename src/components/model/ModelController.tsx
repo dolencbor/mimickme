@@ -19,9 +19,11 @@ const ANIMATION_ORDER: readonly SemanticBone[] = [
   "chest",
   "neck",
   "head",
+  "leftShoulder",
   "leftUpperArm",
   "leftForearm",
   "leftHand",
+  "rightShoulder",
   "rightUpperArm",
   "rightForearm",
   "rightHand",
@@ -80,19 +82,29 @@ export function ModelController({
     const allBones = collectBones(model);
     const targets: Partial<Record<SemanticBone, Bone[]>> = {};
     const restRotations = new Map<Bone, Quaternion>();
+    const restModelSpaceRotations = new Map<Bone, Quaternion>();
+    const modelWorldInverse = new Quaternion();
+    const boneWorld = new Quaternion();
+    model.updateMatrixWorld(true);
+    model.getWorldQuaternion(modelWorldInverse).invert();
     for (const semantic of SEMANTIC_BONES) {
       const boneName = report.mapping[semantic];
       if (!boneName) continue;
       const matches = allBones.filter((bone) => bone.name === boneName);
       if (matches.length > 0) targets[semantic] = matches;
-      matches.forEach((bone) => restRotations.set(bone, bone.quaternion.clone()));
+      matches.forEach((bone) => {
+        restRotations.set(bone, bone.quaternion.clone());
+        bone.getWorldQuaternion(boneWorld);
+        restModelSpaceRotations.set(bone, modelWorldInverse.clone().multiply(boneWorld));
+      });
     }
-    return { report, targets, restRotations };
+    return { report, targets, restRotations, restModelSpaceRotations };
   }, [model]);
   const frameQuaternions = useMemo(() => ({
     deltaWorld: new Quaternion(),
     parentWorld: new Quaternion(),
-    localDelta: new Quaternion(),
+    modelWorld: new Quaternion(),
+    desiredWorld: new Quaternion(),
     trackedTarget: new Quaternion(),
     target: new Quaternion(),
   }), []);
@@ -125,12 +137,20 @@ export function ModelController({
     if (trackingInfluenceRef && hasTrackedMotion) lastTrackedFrameRef.current = frame;
     const motionFrame = trackingInfluenceRef ? (hasTrackedMotion ? frame : lastTrackedFrameRef.current) : frame;
     const trackingInfluence = trackingInfluenceRef ? trackingInfluenceRef.current : 1;
-    const smoothing = 1 - Math.exp(-TRACKING_CONFIG.rotationSmoothingSpeed * deltaSeconds);
-    const rootSmoothing = 1 - Math.exp(-TRACKING_CONFIG.positionSmoothingSpeed * deltaSeconds);
-
     const rootTarget = rootTargetRef.current;
     rootTarget.fromArray(motionFrame?.rootPosition ?? [0, 0, 0]).multiplyScalar(trackingInfluence);
-    rootRef.current?.position.lerp(rootTarget, rootSmoothing);
+    if (rootRef.current) {
+      const positionResponse = Math.min(
+        1,
+        rootRef.current.position.distanceTo(rootTarget) / TRACKING_CONFIG.positionResponseDistance,
+      );
+      const positionSpeed = TRACKING_CONFIG.positionSmoothingMinSpeed +
+        (TRACKING_CONFIG.positionSmoothingMaxSpeed - TRACKING_CONFIG.positionSmoothingMinSpeed) * positionResponse;
+      rootRef.current.position.lerp(rootTarget, 1 - Math.exp(-positionSpeed * deltaSeconds));
+    }
+
+    model.updateWorldMatrix(true, true);
+    model.getWorldQuaternion(frameQuaternions.modelWorld);
 
     for (const semantic of ANIMATION_ORDER) {
       const rotation = motionFrame?.rotations[semantic];
@@ -138,21 +158,33 @@ export function ModelController({
       if (!bones) continue;
       for (const bone of bones) {
         const rest = rig.restRotations.get(bone);
-        if (!rest) continue;
+        const restModelSpace = rig.restModelSpaceRotations.get(bone);
+        if (!rest || !restModelSpace) continue;
         frameQuaternions.target.copy(rest);
         if (rotation && motionFrame?.trackingActive) {
           frameQuaternions.deltaWorld.fromArray(rotation);
-          if (bone.parent) bone.parent.getWorldQuaternion(frameQuaternions.parentWorld);
-          else frameQuaternions.parentWorld.identity();
-          frameQuaternions.localDelta
-            .copy(frameQuaternions.parentWorld)
-            .invert()
+          frameQuaternions.desiredWorld
+            .copy(frameQuaternions.modelWorld)
             .multiply(frameQuaternions.deltaWorld)
-            .multiply(frameQuaternions.parentWorld);
-          frameQuaternions.trackedTarget.copy(frameQuaternions.localDelta).multiply(rest);
+            .multiply(restModelSpace);
+          if (bone.parent) {
+            bone.parent.getWorldQuaternion(frameQuaternions.parentWorld);
+            frameQuaternions.trackedTarget
+              .copy(frameQuaternions.parentWorld)
+              .invert()
+              .multiply(frameQuaternions.desiredWorld);
+          } else {
+            frameQuaternions.trackedTarget.copy(frameQuaternions.desiredWorld);
+          }
           frameQuaternions.target.slerpQuaternions(rest, frameQuaternions.trackedTarget, trackingInfluence);
         }
-        bone.quaternion.slerp(frameQuaternions.target, smoothing);
+        const rotationResponse = Math.min(
+          1,
+          bone.quaternion.angleTo(frameQuaternions.target) / TRACKING_CONFIG.rotationResponseAngle,
+        );
+        const rotationSpeed = TRACKING_CONFIG.rotationSmoothingMinSpeed +
+          (TRACKING_CONFIG.rotationSmoothingMaxSpeed - TRACKING_CONFIG.rotationSmoothingMinSpeed) * rotationResponse;
+        bone.quaternion.slerp(frameQuaternions.target, 1 - Math.exp(-rotationSpeed * deltaSeconds));
         bone.updateWorldMatrix(true, false);
       }
     }

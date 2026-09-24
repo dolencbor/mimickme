@@ -1,20 +1,30 @@
 import { TRACKING_CONFIG } from "@/config/tracking";
-import { TRACKED_JOINTS, type PoseFrame, type PoseJointName, type Vec3 } from "./types";
+import { CALIBRATION_JOINTS, type PoseFrame, type PoseJointName, type Vec3 } from "./types";
 
 const TRACKABLE_SEGMENTS: readonly (readonly [PoseJointName, PoseJointName])[] = [
+  ["leftEar", "rightEar"],
+  ["leftEye", "rightEye"],
   ["nose", "leftShoulder"],
   ["leftShoulder", "rightShoulder"],
   ["leftShoulder", "leftElbow"],
   ["leftElbow", "leftWrist"],
+  ["leftWrist", "leftIndex"],
+  ["leftWrist", "leftPinky"],
   ["rightShoulder", "rightElbow"],
   ["rightElbow", "rightWrist"],
+  ["rightWrist", "rightIndex"],
+  ["rightWrist", "rightPinky"],
   ["leftShoulder", "leftHip"],
   ["rightShoulder", "rightHip"],
   ["leftHip", "rightHip"],
   ["leftHip", "leftKnee"],
   ["leftKnee", "leftAnkle"],
+  ["leftAnkle", "leftHeel"],
+  ["leftHeel", "leftFootIndex"],
   ["rightHip", "rightKnee"],
   ["rightKnee", "rightAnkle"],
+  ["rightAnkle", "rightHeel"],
+  ["rightHeel", "rightFootIndex"],
 ];
 
 export function isPoseJointReliable(frame: PoseFrame, name: PoseJointName) {
@@ -35,5 +45,5 @@ export function hasTrackablePoseSegment(frame: PoseFrame) {
 }
 
 export function hasReliableFullBodyPose(frame: PoseFrame) {
-  return TRACKED_JOINTS.every((name) => isPoseJointReliable(frame, name));
+  return CALIBRATION_JOINTS.every((name) => isPoseJointReliable(frame, name));
 }

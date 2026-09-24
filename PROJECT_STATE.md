@@ -29,6 +29,7 @@
 - All four Pepper's Ghost viewports default to a vertical flip, with the top, left, right, and bottom heads oriented toward their respective outside edges. Calibration storage is versioned to apply the corrected orientation on existing browsers.
 - Skeletal motion is confidence-gated per body segment. Visible limbs and torso regions can move independently, while off-camera or low-confidence regions return to their neutral pose until their required landmarks are reliable again; neutral calibration still requires a reliable full-body pose.
 - Hologram control is keyed to usable live skeletal motion, not only the coarse tracking status. It smoothly blends from idle rotation/float into the camera-driven pose, briefly holds through tracking dropouts, and blends back to idle when usable motion is absent.
+- High-fidelity tracking consumes all 33 MediaPipe pose landmarks, including face references, palms, heels, and toes. It drives hips, three torso levels, clavicles, head/neck, limbs, hands, feet, and calibrated root depth through hierarchy-aware world-to-local retargeting and adaptive smoothing.
 
 ## Important files
 
@@ -77,7 +78,7 @@
 ## Bone mappings
 
 - Runtime mapping uses normalized exact aliases and never silently fuzzy-matches a rig.
-- The built-in FV2.1 mannequin resolves all 17 semantic bones through the exact `MANUAL_BONE_MAP` contract in `src/config/boneMap.ts`.
+- The built-in FV2.1 mannequin resolves all 19 semantic bones through the exact `MANUAL_BONE_MAP` contract in `src/config/boneMap.ts`.
 - Canonical mappings include `Pelvis`, `Spine`, `Spine3`, limb names such as `Left_Arm`/`Left_ForeArm`, and ankle bones as semantic feet.
 
 ## Unresolved issues

@@ -27,7 +27,7 @@ export function CalibrationStatus({ stage, profile, boneReport, onRecalibrate, s
         <p className="eyebrow">CALIBRATION</p>
         <h3>{STAGE_COPY[stage]}</h3>
         <p>
-          {stage === "STAND_IN_FRAME" ? "Keep shoulders, hips, knees, and ankles visible." : null}
+          {stage === "STAND_IN_FRAME" ? "Keep your full body visible; face, hands, and feet improve precision." : null}
           {stage === "HOLD_NEUTRAL" ? "Face forward with arms relaxed and feet apart." : null}
           {stage === "CALIBRATING" ? "Keep still while neutral pose offsets are captured." : null}
           {stage === "READY" ? `${profile?.sampleCount ?? 0} neutral-pose samples captured.` : null}
