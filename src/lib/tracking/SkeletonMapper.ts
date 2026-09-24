@@ -1,5 +1,5 @@
 import { Matrix4, Quaternion, Vector3 } from "three";
-import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
+import { DIRECTLY_CONTROLLED_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
 import type { CalibrationProfile } from "./calibration";
 import { reliablePosePoint } from "./poseReliability";
@@ -12,32 +12,25 @@ export type BonePose = {
   rotations: Partial<Record<SemanticBone, QuaternionTuple>>;
 };
 
-type Side = "left" | "right";
-type OrientationKey = "hips" | "chest" | "head" | "leftHand" | "rightHand" | "leftFoot" | "rightFoot";
-type LimbChain = {
-  key: SemanticBone;
+type OrientationKey = "hips" | "torso" | "head";
+type LimbSegment = {
+  bone: SemanticBone;
   from: PoseJointName;
   to: PoseJointName;
-  base: SemanticBone;
-  middle?: SemanticBone;
-  baseFraction?: number;
   maxAngle: number;
 };
 
 const DEG = Math.PI / 180;
 const IDENTITY = new Quaternion();
-const LEFT_EYES: readonly PoseJointName[] = ["leftEyeInner", "leftEye", "leftEyeOuter"];
-const RIGHT_EYES: readonly PoseJointName[] = ["rightEyeInner", "rightEye", "rightEyeOuter"];
-
-const LIMB_CHAINS: readonly LimbChain[] = [
-  { key: "leftUpperArm", from: "leftShoulder", to: "leftElbow", base: "leftUpperArm", middle: "leftUpperArmMiddle", baseFraction: 0.62, maxAngle: 150 * DEG },
-  { key: "leftForearm", from: "leftElbow", to: "leftWrist", base: "leftForearm", middle: "leftForearmMiddle", baseFraction: 0.72, maxAngle: 145 * DEG },
-  { key: "rightUpperArm", from: "rightShoulder", to: "rightElbow", base: "rightUpperArm", middle: "rightUpperArmMiddle", baseFraction: 0.62, maxAngle: 150 * DEG },
-  { key: "rightForearm", from: "rightElbow", to: "rightWrist", base: "rightForearm", middle: "rightForearmMiddle", baseFraction: 0.72, maxAngle: 145 * DEG },
-  { key: "leftUpperLeg", from: "leftHip", to: "leftKnee", base: "leftUpperLeg", middle: "leftUpperLegMiddle", baseFraction: 0.72, maxAngle: 125 * DEG },
-  { key: "leftLowerLeg", from: "leftKnee", to: "leftAnkle", base: "leftLowerLeg", maxAngle: 145 * DEG },
-  { key: "rightUpperLeg", from: "rightHip", to: "rightKnee", base: "rightUpperLeg", middle: "rightUpperLegMiddle", baseFraction: 0.72, maxAngle: 125 * DEG },
-  { key: "rightLowerLeg", from: "rightKnee", to: "rightAnkle", base: "rightLowerLeg", maxAngle: 145 * DEG },
+const LIMB_SEGMENTS: readonly LimbSegment[] = [
+  { bone: "leftUpperArm", from: "leftShoulder", to: "leftElbow", maxAngle: 135 * DEG },
+  { bone: "leftForearm", from: "leftElbow", to: "leftWrist", maxAngle: 135 * DEG },
+  { bone: "rightUpperArm", from: "rightShoulder", to: "rightElbow", maxAngle: 135 * DEG },
+  { bone: "rightForearm", from: "rightElbow", to: "rightWrist", maxAngle: 135 * DEG },
+  { bone: "leftUpperLeg", from: "leftHip", to: "leftKnee", maxAngle: 105 * DEG },
+  { bone: "leftLowerLeg", from: "leftKnee", to: "leftAnkle", maxAngle: 125 * DEG },
+  { bone: "rightUpperLeg", from: "rightHip", to: "rightKnee", maxAngle: 105 * DEG },
+  { bone: "rightLowerLeg", from: "rightKnee", to: "rightAnkle", maxAngle: 125 * DEG },
 ];
 
 function trackerVector(value: Vec3, target: Vector3) {
@@ -71,16 +64,10 @@ export class SkeletonMapper {
 
   constructor(private readonly calibration: CalibrationProfile) {
     const neutral = calibration.neutralPose;
-    for (const chain of LIMB_CHAINS) this.captureDirection(neutral, chain.key, chain.from, chain.to);
-    this.captureShoulder(neutral, "left");
-    this.captureShoulder(neutral, "right");
+    for (const segment of LIMB_SEGMENTS) this.captureDirection(neutral, segment.bone, segment.from, segment.to);
     if (this.readTorsoOrientation(neutral, "hips", this.currentOrientation)) this.captureOrientation("hips");
-    if (this.readTorsoOrientation(neutral, "shoulders", this.currentOrientation)) this.captureOrientation("chest");
+    if (this.readTorsoOrientation(neutral, "shoulders", this.currentOrientation)) this.captureOrientation("torso");
     if (this.readHeadOrientation(neutral, this.currentOrientation)) this.captureOrientation("head");
-    if (this.readHandOrientation(neutral, "left", this.currentOrientation)) this.captureOrientation("leftHand");
-    if (this.readHandOrientation(neutral, "right", this.currentOrientation)) this.captureOrientation("rightHand");
-    if (this.readFootOrientation(neutral, "left", this.currentOrientation)) this.captureOrientation("leftFoot");
-    if (this.readFootOrientation(neutral, "right", this.currentOrientation)) this.captureOrientation("rightFoot");
   }
 
   private readPoint(frame: PoseFrame, name: PoseJointName, target: Vector3) {
@@ -88,21 +75,6 @@ export class SkeletonMapper {
     if (!point) return false;
     trackerVector(point, target);
     return Number.isFinite(target.x) && Number.isFinite(target.y) && Number.isFinite(target.z);
-  }
-
-  private readAverage(frame: PoseFrame, names: readonly PoseJointName[], target: Vector3) {
-    target.set(0, 0, 0);
-    let count = 0;
-    for (const name of names) {
-      const point = reliablePosePoint(frame, name);
-      if (!point) continue;
-      trackerVector(point, this.points[7]);
-      target.add(this.points[7]);
-      count += 1;
-    }
-    if (count === 0) return false;
-    target.multiplyScalar(1 / count);
-    return true;
   }
 
   private makeOrientation(target: Quaternion) {
@@ -162,78 +134,21 @@ export class SkeletonMapper {
     return this.makeOrientation(target);
   }
 
-  private readShoulderDirection(frame: PoseFrame, side: Side, target: Vector3) {
-    if (!this.readPoint(frame, "leftShoulder", this.points[0]) || !this.readPoint(frame, "rightShoulder", this.points[1])) return false;
-    this.points[2].addVectors(this.points[0], this.points[1]).multiplyScalar(0.5);
-    target.subVectors(side === "left" ? this.points[0] : this.points[1], this.points[2]);
-    if (target.lengthSq() < 1e-8) return false;
-    target.normalize();
-    return true;
-  }
-
-  private captureShoulder(frame: PoseFrame, side: Side) {
-    const key: SemanticBone = side === "left" ? "leftShoulder" : "rightShoulder";
-    if (!this.readShoulderDirection(frame, side, this.currentDirection)) return false;
-    this.neutralDirections.set(key, this.currentDirection.clone());
-    return true;
-  }
-
-  private shoulderDelta(frame: PoseFrame, side: Side, target: Quaternion) {
-    const key: SemanticBone = side === "left" ? "leftShoulder" : "rightShoulder";
-    if (!this.readShoulderDirection(frame, side, this.currentDirection)) return false;
-    const neutral = this.neutralDirections.get(key);
-    if (!neutral) {
-      this.neutralDirections.set(key, this.currentDirection.clone());
-      return false;
-    }
-    target.setFromUnitVectors(neutral, this.currentDirection).normalize();
-    return this.stabilize(target);
-  }
-
   private readHeadOrientation(frame: PoseFrame, target: Quaternion) {
     if (
       !this.readPoint(frame, "leftEar", this.points[0]) ||
       !this.readPoint(frame, "rightEar", this.points[1]) ||
-      !this.readAverage(frame, LEFT_EYES, this.points[2]) ||
-      !this.readAverage(frame, RIGHT_EYES, this.points[3]) ||
-      !this.readPoint(frame, "mouthLeft", this.points[4]) ||
-      !this.readPoint(frame, "mouthRight", this.points[5])
+      !this.readPoint(frame, "nose", this.points[2]) ||
+      !this.readPoint(frame, "mouthLeft", this.points[3]) ||
+      !this.readPoint(frame, "mouthRight", this.points[4])
     ) return false;
     this.xAxis.subVectors(this.points[0], this.points[1]);
-    this.points[2].add(this.points[3]).multiplyScalar(0.5);
-    this.points[4].add(this.points[5]).multiplyScalar(0.5);
-    this.yAxis.subVectors(this.points[2], this.points[4]);
-    if (this.readPoint(frame, "nose", this.points[6])) {
-      this.points[5].addVectors(this.points[2], this.points[4]).multiplyScalar(0.5);
-      this.zAxis.crossVectors(this.xAxis, this.yAxis);
-      this.points[6].sub(this.points[5]);
-      if (this.zAxis.dot(this.points[6]) < 0) this.xAxis.negate();
-    }
-    return this.makeOrientation(target);
-  }
-
-  private readHandOrientation(frame: PoseFrame, side: Side, target: Quaternion) {
-    const wrist = `${side}Wrist` as PoseJointName;
-    const index = `${side}Index` as PoseJointName;
-    const pinky = `${side}Pinky` as PoseJointName;
-    const thumb = `${side}Thumb` as PoseJointName;
-    if (!this.readPoint(frame, wrist, this.points[0]) || !this.readPoint(frame, index, this.points[1]) || !this.readPoint(frame, pinky, this.points[2])) return false;
-    if (!this.readPoint(frame, thumb, this.points[3])) this.points[3].addVectors(this.points[1], this.points[2]).multiplyScalar(0.5);
-    this.points[4].copy(this.points[1]).add(this.points[2]).add(this.points[3]).multiplyScalar(1 / 3);
-    this.xAxis.subVectors(this.points[1], this.points[2]);
-    this.yAxis.subVectors(this.points[4], this.points[0]);
-    return this.makeOrientation(target);
-  }
-
-  private readFootOrientation(frame: PoseFrame, side: Side, target: Quaternion) {
-    const ankle = `${side}Ankle` as PoseJointName;
-    const heel = `${side}Heel` as PoseJointName;
-    const toe = `${side}FootIndex` as PoseJointName;
-    if (!this.readPoint(frame, ankle, this.points[0]) || !this.readPoint(frame, heel, this.points[1]) || !this.readPoint(frame, toe, this.points[2])) return false;
-    this.points[3].subVectors(this.points[2], this.points[1]);
-    this.points[4].subVectors(this.points[0], this.points[1]);
-    this.xAxis.crossVectors(this.points[4], this.points[3]);
-    this.yAxis.copy(this.points[4]);
+    this.points[5].addVectors(this.points[3], this.points[4]).multiplyScalar(0.5);
+    this.yAxis.subVectors(this.points[2], this.points[5]);
+    this.zAxis.crossVectors(this.xAxis, this.yAxis);
+    this.points[6].addVectors(this.points[0], this.points[1]).multiplyScalar(0.5);
+    this.points[2].sub(this.points[6]);
+    if (this.zAxis.dot(this.points[2]) < 0) this.xAxis.negate();
     return this.makeOrientation(target);
   }
 
@@ -272,25 +187,21 @@ export class SkeletonMapper {
     value: Quaternion,
     timestamp: number,
     maxAngle: number,
-    fraction = 1,
   ) {
-    this.limitedDelta.copy(value);
-    this.blendedDelta.copy(IDENTITY).slerp(this.limitedDelta, fraction).normalize();
-    const result = this.limit(this.blendedDelta, maxAngle, this.limitedDelta);
+    const result = this.limit(value, maxAngle, this.limitedDelta);
     const rotation = tuple(result);
     rotations[bone] = rotation;
     this.lastRotations[bone] = rotation;
     this.lastRotationAt[bone] = timestamp;
   }
 
-  private mapLimb(rotations: BonePose["rotations"], frame: PoseFrame, chain: LimbChain) {
-    if (!this.directionDelta(frame, chain.key, chain.from, chain.to, this.delta)) return;
-    this.write(rotations, chain.base, this.delta, frame.timestamp, chain.maxAngle, chain.baseFraction ?? 1);
-    if (chain.middle) this.write(rotations, chain.middle, this.delta, frame.timestamp, chain.maxAngle);
+  private mapLimb(rotations: BonePose["rotations"], frame: PoseFrame, segment: LimbSegment) {
+    if (!this.directionDelta(frame, segment.bone, segment.from, segment.to, this.delta)) return;
+    this.write(rotations, segment.bone, this.delta, frame.timestamp, segment.maxAngle);
   }
 
   private holdMissing(rotations: BonePose["rotations"], timestamp: number) {
-    for (const bone of SEMANTIC_BONES) {
+    for (const bone of DIRECTLY_CONTROLLED_BONES) {
       if (rotations[bone]) continue;
       const last = this.lastRotations[bone];
       const seenAt = this.lastRotationAt[bone];
@@ -302,53 +213,31 @@ export class SkeletonMapper {
     const rotations: BonePose["rotations"] = {};
     if (!frame.trackingActive) return { timestamp: frame.timestamp, rotations };
 
-    let hasHips = false;
     let hasChest = false;
     if (this.readTorsoOrientation(frame, "hips", this.currentOrientation)) {
-      hasHips = this.orientationDelta("hips", this.currentOrientation, this.hipsDelta);
-      if (hasHips) this.write(rotations, "hips", this.hipsDelta, frame.timestamp, 115 * DEG);
+      if (this.orientationDelta("hips", this.currentOrientation, this.hipsDelta)) {
+        this.write(rotations, "hips", this.hipsDelta, frame.timestamp, 70 * DEG);
+      }
     }
     if (this.readTorsoOrientation(frame, "shoulders", this.currentOrientation)) {
-      hasChest = this.orientationDelta("chest", this.currentOrientation, this.chestDelta);
+      hasChest = this.orientationDelta("torso", this.currentOrientation, this.chestDelta);
     }
     if (hasChest) {
-      const lower = hasHips ? this.hipsDelta : IDENTITY;
-      this.blendedDelta.slerpQuaternions(lower, this.chestDelta, 0.25);
-      this.write(rotations, "spine", this.blendedDelta, frame.timestamp, 110 * DEG);
-      this.blendedDelta.slerpQuaternions(lower, this.chestDelta, 0.5);
-      this.write(rotations, "spineMiddle", this.blendedDelta, frame.timestamp, 110 * DEG);
-      this.blendedDelta.slerpQuaternions(lower, this.chestDelta, 0.75);
-      this.write(rotations, "spineUpper", this.blendedDelta, frame.timestamp, 110 * DEG);
-      this.write(rotations, "chest", this.chestDelta, frame.timestamp, 115 * DEG);
+      // Spine is a sibling of Pelvis in the FV2.1 rig. Driving only the base
+      // spine lets the rest of the torso inherit one coherent orientation.
+      this.write(rotations, "spine", this.chestDelta, frame.timestamp, 65 * DEG);
     }
 
-    if (this.shoulderDelta(frame, "left", this.delta)) this.write(rotations, "leftShoulder", this.delta, frame.timestamp, 55 * DEG);
-    if (this.shoulderDelta(frame, "right", this.delta)) this.write(rotations, "rightShoulder", this.delta, frame.timestamp, 55 * DEG);
-    for (const chain of LIMB_CHAINS) this.mapLimb(rotations, frame, chain);
+    for (const segment of LIMB_SEGMENTS) this.mapLimb(rotations, frame, segment);
 
     if (this.readHeadOrientation(frame, this.currentOrientation) && this.orientationDelta("head", this.currentOrientation, this.delta)) {
       const torso = hasChest ? this.chestDelta : IDENTITY;
       this.relativeDelta.copy(this.inverse.copy(torso).invert()).multiply(this.delta).normalize();
-      this.limit(this.relativeDelta, 70 * DEG, this.relativeDelta);
-      this.blendedDelta.copy(IDENTITY).slerp(this.relativeDelta, 0.3).premultiply(torso);
-      this.write(rotations, "neck", this.blendedDelta, frame.timestamp, 150 * DEG);
-      this.blendedDelta.copy(IDENTITY).slerp(this.relativeDelta, 0.62).premultiply(torso);
-      this.write(rotations, "neckUpper", this.blendedDelta, frame.timestamp, 150 * DEG);
+      this.limit(this.relativeDelta, 55 * DEG, this.relativeDelta);
+      this.blendedDelta.copy(IDENTITY).slerp(this.relativeDelta, 0.35).premultiply(torso);
+      this.write(rotations, "neck", this.blendedDelta, frame.timestamp, 65 * DEG);
       this.blendedDelta.copy(torso).multiply(this.relativeDelta);
-      this.write(rotations, "head", this.blendedDelta, frame.timestamp, 160 * DEG);
-    }
-
-    if (this.readHandOrientation(frame, "left", this.currentOrientation) && this.orientationDelta("leftHand", this.currentOrientation, this.delta)) {
-      this.write(rotations, "leftHand", this.delta, frame.timestamp, 85 * DEG);
-    }
-    if (this.readHandOrientation(frame, "right", this.currentOrientation) && this.orientationDelta("rightHand", this.currentOrientation, this.delta)) {
-      this.write(rotations, "rightHand", this.delta, frame.timestamp, 85 * DEG);
-    }
-    if (this.readFootOrientation(frame, "left", this.currentOrientation) && this.orientationDelta("leftFoot", this.currentOrientation, this.delta)) {
-      this.write(rotations, "leftFoot", this.delta, frame.timestamp, 65 * DEG);
-    }
-    if (this.readFootOrientation(frame, "right", this.currentOrientation) && this.orientationDelta("rightFoot", this.currentOrientation, this.delta)) {
-      this.write(rotations, "rightFoot", this.delta, frame.timestamp, 65 * DEG);
+      this.write(rotations, "head", this.blendedDelta, frame.timestamp, 80 * DEG);
     }
 
     this.holdMissing(rotations, frame.timestamp);

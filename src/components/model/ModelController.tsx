@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Bone, Group, Mesh, Quaternion, SkeletonHelper, Sphere, Vector3 } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
+import { DIRECTLY_CONTROLLED_BONES, SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
 import { collectBones, detectBoneMapping, type BoneMappingReport } from "@/lib/model/boneMapping";
 import { isAvatarMeshName, isGarmentMeshName } from "@/lib/model/inspectModel";
@@ -13,36 +13,22 @@ import { getModelBounds } from "@/lib/model/modelBounds";
 import { hasUsableSkeletalMotion, type SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import { FittedBounds } from "./FittedBounds";
 
-const ANIMATION_ORDER: readonly SemanticBone[] = [
-  "hips",
-  "spine",
-  "spineMiddle",
-  "spineUpper",
-  "chest",
-  "neck",
-  "neckUpper",
-  "head",
-  "leftShoulder",
-  "leftUpperArm",
-  "leftUpperArmMiddle",
-  "leftForearm",
-  "leftForearmMiddle",
-  "leftHand",
-  "rightShoulder",
-  "rightUpperArm",
-  "rightUpperArmMiddle",
-  "rightForearm",
-  "rightForearmMiddle",
-  "rightHand",
-  "leftUpperLeg",
-  "leftUpperLegMiddle",
-  "leftLowerLeg",
-  "leftFoot",
-  "rightUpperLeg",
-  "rightUpperLegMiddle",
-  "rightLowerLeg",
-  "rightFoot",
-];
+const ANIMATION_ORDER: readonly SemanticBone[] = DIRECTLY_CONTROLLED_BONES;
+const TRANSFORM_EPSILON_SQ = 1e-12;
+const BONE_SEGMENTS: Partial<Record<SemanticBone, string>> = {
+  hips: "hip frame",
+  spine: "shoulder/hip torso frame",
+  neck: "torso → face frame (35%)",
+  head: "torso → face frame",
+  leftUpperArm: "left shoulder → elbow",
+  leftForearm: "left elbow → wrist",
+  rightUpperArm: "right shoulder → elbow",
+  rightForearm: "right elbow → wrist",
+  leftUpperLeg: "left hip → knee",
+  leftLowerLeg: "left knee → ankle",
+  rightUpperLeg: "right hip → knee",
+  rightLowerLeg: "right knee → ankle",
+};
 
 type Props = {
   url: string;
@@ -93,6 +79,8 @@ export function ModelController({
     const allBones = collectBones(model);
     const targets: Partial<Record<SemanticBone, Bone[]>> = {};
     const restRotations = new Map<Bone, Quaternion>();
+    const restPositions = new Map<Bone, Vector3>();
+    const restScales = new Map<Bone, Vector3>();
     const restModelSpaceRotations = new Map<Bone, Quaternion>();
     const modelWorldInverse = new Quaternion();
     const boneWorld = new Quaternion();
@@ -105,22 +93,27 @@ export function ModelController({
       if (matches.length > 0) targets[semantic] = matches;
       matches.forEach((bone) => {
         restRotations.set(bone, bone.quaternion.clone());
+        restPositions.set(bone, bone.position.clone());
+        restScales.set(bone, bone.scale.clone());
         bone.getWorldQuaternion(boneWorld);
         restModelSpaceRotations.set(bone, modelWorldInverse.clone().multiply(boneWorld));
       });
     }
-    return { report, targets, restRotations, restModelSpaceRotations };
+    return { report, targets, restRotations, restPositions, restScales, restModelSpaceRotations };
   }, [model]);
   const frameQuaternions = useMemo(() => ({
     deltaWorld: new Quaternion(),
     parentWorld: new Quaternion(),
     modelWorld: new Quaternion(),
-    desiredWorld: new Quaternion(),
+    modelWorldInverse: new Quaternion(),
+    parentModelSpace: new Quaternion(),
+    desiredModelSpace: new Quaternion(),
     trackedTarget: new Quaternion(),
     target: new Quaternion(),
   }), []);
   const rootTargetRef = useRef(new Vector3());
   const lastTrackedFrameRef = useRef<SkeletalFrame | null>(null);
+  const lastDiagnosticAtRef = useRef(0);
 
   useEffect(() => onBoneMap(rig.report), [onBoneMap, rig.report]);
   useEffect(() => onModelRadius?.(prepared.radius), [onModelRadius, prepared.radius]);
@@ -164,6 +157,9 @@ export function ModelController({
 
     model.updateWorldMatrix(true, true);
     model.getWorldQuaternion(frameQuaternions.modelWorld);
+    frameQuaternions.modelWorldInverse.copy(frameQuaternions.modelWorld).invert();
+    const diagnosticDue = skeletonVisible && performance.now() - lastDiagnosticAtRef.current >= 1_500;
+    const diagnosticRows: Array<Record<string, string | number | boolean>> | null = diagnosticDue ? [] : null;
 
     for (const semantic of ANIMATION_ORDER) {
       const rotation = motionFrame?.rotations[semantic];
@@ -171,23 +167,36 @@ export function ModelController({
       if (!bones) continue;
       for (const bone of bones) {
         const rest = rig.restRotations.get(bone);
+        const restPosition = rig.restPositions.get(bone);
+        const restScale = rig.restScales.get(bone);
         const restModelSpace = rig.restModelSpaceRotations.get(bone);
-        if (!rest || !restModelSpace) continue;
+        if (!rest || !restPosition || !restScale || !restModelSpace) continue;
+        const positionChanged = bone.position.distanceToSquared(restPosition) > TRANSFORM_EPSILON_SQ;
+        const scaleChanged = bone.scale.distanceToSquared(restScale) > TRANSFORM_EPSILON_SQ;
+        if (positionChanged) bone.position.copy(restPosition);
+        if (scaleChanged) bone.scale.copy(restScale);
         frameQuaternions.target.copy(rest);
+        let rotationDelta = 0;
         if (rotation && motionFrame?.trackingActive) {
-          frameQuaternions.deltaWorld.fromArray(rotation);
-          frameQuaternions.desiredWorld
-            .copy(frameQuaternions.modelWorld)
-            .multiply(frameQuaternions.deltaWorld)
+          frameQuaternions.deltaWorld.fromArray(rotation).normalize();
+          rotationDelta = 2 * Math.acos(Math.min(1, Math.abs(frameQuaternions.deltaWorld.w)));
+          frameQuaternions.desiredModelSpace
+            .copy(frameQuaternions.deltaWorld)
             .multiply(restModelSpace);
           if (bone.parent) {
+            // Intermediate/helper bones are not directly controlled, but their
+            // world matrices must reflect the already-updated parent chain.
+            bone.parent.updateWorldMatrix(true, false);
             bone.parent.getWorldQuaternion(frameQuaternions.parentWorld);
+            frameQuaternions.parentModelSpace
+              .copy(frameQuaternions.modelWorldInverse)
+              .multiply(frameQuaternions.parentWorld);
             frameQuaternions.trackedTarget
-              .copy(frameQuaternions.parentWorld)
+              .copy(frameQuaternions.parentModelSpace)
               .invert()
-              .multiply(frameQuaternions.desiredWorld);
+              .multiply(frameQuaternions.desiredModelSpace);
           } else {
-            frameQuaternions.trackedTarget.copy(frameQuaternions.desiredWorld);
+            frameQuaternions.trackedTarget.copy(frameQuaternions.desiredModelSpace);
           }
           frameQuaternions.target.slerpQuaternions(rest, frameQuaternions.trackedTarget, trackingInfluence);
         }
@@ -199,7 +208,20 @@ export function ModelController({
           (TRACKING_CONFIG.rotationSmoothingMaxSpeed - TRACKING_CONFIG.rotationSmoothingMinSpeed) * rotationResponse;
         bone.quaternion.slerp(frameQuaternions.target, 1 - Math.exp(-rotationSpeed * deltaSeconds));
         bone.updateWorldMatrix(true, false);
+        if (diagnosticRows) {
+          diagnosticRows.push({
+            bone: bone.name,
+            segment: BONE_SEGMENTS[semantic] ?? semantic,
+            rotationDeltaDegrees: Math.round(rotationDelta * 180 / Math.PI),
+            positionChanged,
+            scaleChanged,
+          });
+        }
       }
+    }
+    if (diagnosticRows) {
+      lastDiagnosticAtRef.current = performance.now();
+      console.table(diagnosticRows);
     }
   });
 

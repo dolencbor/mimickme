@@ -161,7 +161,7 @@ export function PoseTrackerView() {
             skeletalFrameRef={skeletalFrameRef}
             avatarVisible={avatarVisible}
             garmentVisible={garmentVisible}
-            skeletonVisible={skeletonVisible}
+            skeletonVisible={debugVisible || skeletonVisible}
             onBoneMap={handleBoneMap}
           />
           <div className="camera-badge">Tracked model · {modelSource.label}</div>
@@ -202,7 +202,12 @@ export function PoseTrackerView() {
 
           <div className="debug-controls">
             <label className="debug-toggle">
-              <input type="checkbox" checked={skeletonVisible} onChange={(event) => setSkeletonVisible(event.target.checked)} />
+              <input
+                type="checkbox"
+                checked={debugVisible || skeletonVisible}
+                disabled={debugVisible}
+                onChange={(event) => setSkeletonVisible(event.target.checked)}
+              />
               SKELETON
             </label>
             <div className="hand-selector" aria-label="Active hand cursor">

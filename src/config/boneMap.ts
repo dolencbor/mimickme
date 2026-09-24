@@ -31,6 +31,24 @@ export const SEMANTIC_BONES = [
 
 export type SemanticBone = (typeof SEMANTIC_BONES)[number];
 
+// Keep runtime control intentionally small. The FV2.1 helper/intermediate bones
+// inherit these rotations through the rig hierarchy and remain at bind-local
+// transforms instead of receiving duplicate tracking deltas.
+export const DIRECTLY_CONTROLLED_BONES = [
+  "hips",
+  "spine",
+  "neck",
+  "head",
+  "leftUpperArm",
+  "leftForearm",
+  "rightUpperArm",
+  "rightForearm",
+  "leftUpperLeg",
+  "leftLowerLeg",
+  "rightUpperLeg",
+  "rightLowerLeg",
+] as const satisfies readonly SemanticBone[];
+
 export const BONE_ALIASES: Record<SemanticBone, readonly string[]> = {
   hips: ["Hips", "Pelvis", "Root", "mixamorigHips"],
   spine: ["Spine", "mixamorigSpine"],
