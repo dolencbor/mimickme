@@ -27,6 +27,7 @@ export function ModelWorkspace() {
   const [source, setSource] = useState<ModelSource>({ ...BUILT_IN_MODEL_CONFIG } as ModelSource);
   const [report, setReport] = useState<ModelReport | null>(null);
   const [avatarVisible, setAvatarVisible] = useState(true);
+  const [garmentVisible, setGarmentVisible] = useState(true);
   const [skeletonVisible, setSkeletonVisible] = useState(false);
   const [webGLAvailable, setWebGLAvailable] = useState(true);
   const objectUrlRef = useRef<string | null>(null);
@@ -122,6 +123,7 @@ export function ModelWorkspace() {
               <span>{source.kind === "local" ? "LOCAL MODEL" : "BUILT-IN MODEL"}</span>
               <div className="toggle-group">
                 <label><input type="checkbox" checked={avatarVisible} onChange={(event) => setAvatarVisible(event.target.checked)} /> AVATAR</label>
+                <label><input type="checkbox" checked={garmentVisible} onChange={(event) => setGarmentVisible(event.target.checked)} /> CLOTHES</label>
                 <label><input type="checkbox" checked={skeletonVisible} onChange={(event) => setSkeletonVisible(event.target.checked)} /> SKELETON</label>
               </div>
             </div>
@@ -130,6 +132,7 @@ export function ModelWorkspace() {
                 key={source.id}
                 url={source.url}
                 avatarVisible={avatarVisible}
+                garmentVisible={garmentVisible}
                 skeletonVisible={skeletonVisible}
                 onInspect={handleInspect}
               />

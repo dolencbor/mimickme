@@ -30,6 +30,7 @@
 - Skeletal motion is confidence-gated per body segment. Visible limbs and torso regions can move independently, while off-camera or low-confidence regions return to their neutral pose until their required landmarks are reliable again; neutral calibration still requires a reliable full-body pose.
 - Hologram control is keyed to usable live skeletal motion, not only the coarse tracking status. It smoothly blends from idle rotation/float into the camera-driven pose, briefly holds through tracking dropouts, and blends back to idle when usable motion is absent.
 - High-fidelity tracking consumes all 33 MediaPipe pose landmarks, including face references, palms, heels, and toes. It drives hips, three torso levels, clavicles, head/neck, limbs, hands, feet, and calibrated root depth through hierarchy-aware world-to-local retargeting and adaptive smoothing.
+- Avatar and clothes visibility are independently controllable in model setup and the live mirror. Both states propagate to the four-view hologram through the versioned tracking channel; `A` toggles the avatar and `G` toggles clothes.
 
 ## Important files
 
