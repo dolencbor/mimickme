@@ -44,10 +44,18 @@ export class SkeletonMapper {
   private readonly neutralTorso = new Quaternion();
   private readonly inverseNeutralTorso = new Quaternion();
   private readonly currentTorso = new Quaternion();
+  private readonly neutralDirections = new Map<SemanticBone, Vector3>();
+  private hasNeutralTorso = false;
 
   constructor(private readonly calibration: CalibrationProfile) {
-    this.readTorsoOrientation(calibration.neutralPose, this.neutralTorso);
-    this.inverseNeutralTorso.copy(this.neutralTorso).invert();
+    this.hasNeutralTorso = this.readTorsoOrientation(calibration.neutralPose, this.neutralTorso);
+    if (this.hasNeutralTorso) this.inverseNeutralTorso.copy(this.neutralTorso).invert();
+    for (const segment of SEGMENTS) {
+      const direction = new Vector3();
+      if (this.readDirection(calibration.neutralPose, segment.from, segment.to, direction)) {
+        this.neutralDirections.set(segment.bone, direction);
+      }
+    }
   }
 
   private readDirection(frame: PoseFrame, fromName: PoseJointName, toName: PoseJointName, target: Vector3) {
@@ -89,13 +97,24 @@ export class SkeletonMapper {
     if (!frame.trackingActive) return { timestamp: frame.timestamp, rotations };
 
     if (this.readTorsoOrientation(frame, this.currentTorso)) {
-      this.quaternion.copy(this.currentTorso).multiply(this.inverseNeutralTorso).normalize();
-      rotations.hips = this.quaternion.toArray();
+      if (this.hasNeutralTorso) {
+        this.quaternion.copy(this.currentTorso).multiply(this.inverseNeutralTorso).normalize();
+        rotations.hips = this.quaternion.toArray();
+      } else {
+        this.neutralTorso.copy(this.currentTorso);
+        this.inverseNeutralTorso.copy(this.neutralTorso).invert();
+        this.hasNeutralTorso = true;
+      }
     }
 
     for (const segment of SEGMENTS) {
-      if (!this.readDirection(this.calibration.neutralPose, segment.from, segment.to, this.neutralDirection)) continue;
       if (!this.readDirection(frame, segment.from, segment.to, this.currentDirection)) continue;
+      const neutral = this.neutralDirections.get(segment.bone);
+      if (!neutral) {
+        this.neutralDirections.set(segment.bone, this.currentDirection.clone());
+        continue;
+      }
+      this.neutralDirection.copy(neutral);
       this.quaternion.setFromUnitVectors(this.neutralDirection, this.currentDirection).normalize();
       rotations[segment.bone] = this.quaternion.toArray();
     }

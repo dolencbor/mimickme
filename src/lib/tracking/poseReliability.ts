@@ -1,5 +1,5 @@
 import { TRACKING_CONFIG } from "@/config/tracking";
-import { TRACKED_JOINTS, type PoseFrame, type PoseJointName, type Vec3 } from "./types";
+import type { PoseFrame, PoseJointName, Vec3 } from "./types";
 
 const TRACKABLE_SEGMENTS: readonly (readonly [PoseJointName, PoseJointName])[] = [
   ["nose", "leftShoulder"],
@@ -32,8 +32,4 @@ export function hasTrackablePoseSegment(frame: PoseFrame) {
   return TRACKABLE_SEGMENTS.some(([from, to]) => (
     isPoseJointReliable(frame, from) && isPoseJointReliable(frame, to)
   ));
-}
-
-export function hasReliableFullBodyPose(frame: PoseFrame) {
-  return TRACKED_JOINTS.every((name) => isPoseJointReliable(frame, name));
 }

@@ -1,15 +1,15 @@
 import { TRACKED_JOINTS, type PoseFrame, type PoseJoint, type Vec3 } from "./types";
-import { hasReliableFullBodyPose } from "./poseReliability";
+import { hasTrackablePoseSegment, isPoseJointReliable } from "./poseReliability";
 
 export type CalibrationProfile = {
   createdAt: number;
   sampleCount: number;
   neutralPose: PoseFrame;
-  neutralShoulderDirection: Vec3;
-  neutralHipDirection: Vec3;
-  neutralSpineDirection: Vec3;
-  bodyCenter: Vec3;
-  facingDirection: Vec3;
+  neutralShoulderDirection: Vec3 | null;
+  neutralHipDirection: Vec3 | null;
+  neutralSpineDirection: Vec3 | null;
+  bodyCenter: Vec3 | null;
+  facingDirection: Vec3 | null;
 };
 
 function add(target: Vec3, value: Vec3) {
@@ -44,7 +44,7 @@ function point(joint: PoseJoint | undefined) {
 }
 
 export function createCalibrationProfile(frames: readonly PoseFrame[]): CalibrationProfile | null {
-  const validFrames = frames.filter((frame) => frame.trackingActive && hasReliableFullBodyPose(frame));
+  const validFrames = frames.filter((frame) => frame.trackingActive && hasTrackablePoseSegment(frame));
   if (validFrames.length === 0) return null;
 
   const joints: PoseFrame["joints"] = {};
@@ -56,7 +56,7 @@ export function createCalibrationProfile(frames: readonly PoseFrame[]): Calibrat
     let confidence = 0;
     for (const frame of validFrames) {
       const joint = frame.joints[name];
-      if (!joint) continue;
+      if (!joint || !isPoseJointReliable(frame, name)) continue;
       add(imageTotal, joint.image);
       imageCount += 1;
       confidence += joint.confidence;
@@ -74,30 +74,33 @@ export function createCalibrationProfile(frames: readonly PoseFrame[]): Calibrat
     }
   }
 
+  const confidence = validFrames.reduce((sum, frame) => sum + frame.confidence, 0) / validFrames.length;
+  const timestamp = validFrames.at(-1)?.timestamp ?? 0;
+  const neutralPose: PoseFrame = {
+    timestamp,
+    confidence,
+    bodyCenter: joints.leftHip && joints.rightHip ? midpoint(joints.leftHip.image, joints.rightHip.image) : null,
+    worldBodyCenter: joints.leftHip?.world && joints.rightHip?.world ? midpoint(joints.leftHip.world, joints.rightHip.world) : null,
+    joints,
+    trackingActive: true,
+  };
+  if (!hasTrackablePoseSegment(neutralPose)) return null;
+
   const leftShoulder = point(joints.leftShoulder);
   const rightShoulder = point(joints.rightShoulder);
   const leftHip = point(joints.leftHip);
   const rightHip = point(joints.rightHip);
-  if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) return null;
-  const shoulderCenter = midpoint(leftShoulder, rightShoulder);
-  const hipCenter = midpoint(leftHip, rightHip);
-  const shoulderDirection = normalize(subtract(leftShoulder, rightShoulder));
-  const hipDirection = normalize(subtract(leftHip, rightHip));
-  const spineDirection = normalize(subtract(shoulderCenter, hipCenter));
-  const facingDirection = normalize(cross(shoulderDirection, spineDirection));
-  const confidence = validFrames.reduce((sum, frame) => sum + frame.confidence, 0) / validFrames.length;
+  const shoulderDirection = leftShoulder && rightShoulder ? normalize(subtract(leftShoulder, rightShoulder)) : null;
+  const hipDirection = leftHip && rightHip ? normalize(subtract(leftHip, rightHip)) : null;
+  const shoulderCenter = leftShoulder && rightShoulder ? midpoint(leftShoulder, rightShoulder) : null;
+  const hipCenter = leftHip && rightHip ? midpoint(leftHip, rightHip) : null;
+  const spineDirection = shoulderCenter && hipCenter ? normalize(subtract(shoulderCenter, hipCenter)) : null;
+  const facingDirection = shoulderDirection && spineDirection ? normalize(cross(shoulderDirection, spineDirection)) : null;
 
   return {
-    createdAt: validFrames.at(-1)?.timestamp ?? 0,
+    createdAt: timestamp,
     sampleCount: validFrames.length,
-    neutralPose: {
-      timestamp: validFrames.at(-1)?.timestamp ?? 0,
-      confidence,
-      bodyCenter: midpoint(joints.leftHip?.image ?? leftHip, joints.rightHip?.image ?? rightHip),
-      worldBodyCenter: joints.leftHip?.world && joints.rightHip?.world ? midpoint(joints.leftHip.world, joints.rightHip.world) : null,
-      joints,
-      trackingActive: true,
-    },
+    neutralPose,
     neutralShoulderDirection: shoulderDirection,
     neutralHipDirection: hipDirection,
     neutralSpineDirection: spineDirection,

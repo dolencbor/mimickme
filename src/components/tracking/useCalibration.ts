@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { TRACKING_CONFIG } from "@/config/tracking";
 import { createCalibrationProfile, type CalibrationProfile } from "@/lib/tracking/calibration";
-import { hasReliableFullBodyPose } from "@/lib/tracking/poseReliability";
+import { hasTrackablePoseSegment } from "@/lib/tracking/poseReliability";
 import { TrackingState, type PoseFrame } from "@/lib/tracking/types";
 
 export type CalibrationStage = "STAND_IN_FRAME" | "HOLD_NEUTRAL" | "CALIBRATING" | "READY";
@@ -42,7 +42,7 @@ export function useCalibration({ trackerPhase, trackingState, poseFrameRef, setC
     let animationFrame = 0;
     const tick = (now: number) => {
       const frame = poseFrameRef.current;
-      const personReady = trackerPhase === "running" && frame.trackingActive && hasReliableFullBodyPose(frame);
+      const personReady = trackerPhase === "running" && frame.trackingActive && hasTrackablePoseSegment(frame);
       const currentStage = stageRef.current;
 
       if (currentStage === "STAND_IN_FRAME" && personReady && trackingState === TrackingState.TRACKING) {
