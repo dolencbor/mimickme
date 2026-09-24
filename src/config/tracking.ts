@@ -1,5 +1,9 @@
 export const TRACKING_CONFIG = {
   confidenceThreshold: 0.55,
+  faceConfidenceThreshold: 0.42,
+  extremityConfidenceThreshold: 0.5,
+  detectorConfidenceThreshold: 0.45,
+  trackerConfidenceThreshold: 0.45,
   lostTrackingTimeoutMs: 650,
   noPersonTimeoutMs: 1_500,
   diagnosticsIntervalMs: 400,
@@ -8,17 +12,24 @@ export const TRACKING_CONFIG = {
   neutralHoldMs: 1_000,
   calibrationDurationMs: 1_400,
   minimumCalibrationFrames: 12,
-  rotationSmoothingSpeed: 12,
-  positionSmoothingSpeed: 7,
+  rotationSmoothingMinSpeed: 10,
+  rotationSmoothingMaxSpeed: 28,
+  rotationResponseAngle: 0.65,
+  positionSmoothingMinSpeed: 7,
+  positionSmoothingMaxSpeed: 18,
+  positionResponseDistance: 0.25,
+  jointOcclusionHoldMs: 280,
   rootHorizontalScale: 1.8,
   rootVerticalScale: 1.1,
+  rootDepthScale: 1.25,
   rootHorizontalLimit: 0.65,
   rootVerticalLimit: 0.35,
+  rootDepthLimit: 0.45,
   handCursorConfidenceThreshold: 0.5,
 } as const;
 
 export const MEDIAPIPE_CONFIG = {
   wasmRoot: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm",
   modelAssetPath:
-    "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
+    "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task",
 } as const;

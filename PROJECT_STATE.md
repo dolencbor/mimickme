@@ -31,6 +31,7 @@
 - Hologram control is keyed to usable live skeletal motion, not only the coarse tracking status. It smoothly blends from idle rotation/float into the camera-driven pose, briefly holds through tracking dropouts, and blends back to idle when usable motion is absent.
 - Calibration can begin from any reliable tracked segment rather than requiring the full body. Each limb segment moves only when its required landmark pair is visible; missing segments return to rest, and body parts absent during initial calibration learn a neutral direction when first detected.
 - Avatar and clothes visibility are independently controllable in model setup and the live mirror. Both states propagate to the four-view hologram through the versioned tracking channel; `A` toggles the avatar and `G` toggles clothes.
+- Full-body retargeting consumes all 33 MediaPipe pose landmarks and uses world-space joint vectors plus separate hip, chest, face, hand, and foot frames. Rotation is progressively distributed across the FV2.1 spine, neck, arm, forearm, and thigh chains with bounded quaternions, adaptive smoothing, and a short per-bone occlusion hold.
 
 ## Important files
 
@@ -79,7 +80,7 @@
 ## Bone mappings
 
 - Runtime mapping uses normalized exact aliases and never silently fuzzy-matches a rig.
-- The built-in FV2.1 mannequin resolves all 17 semantic bones through the exact `MANUAL_BONE_MAP` contract in `src/config/boneMap.ts`.
+- The built-in FV2.1 mannequin resolves 28 primary and intermediate semantic targets through the exact `MANUAL_BONE_MAP` contract in `src/config/boneMap.ts`.
 - Canonical mappings include `Pelvis`, `Spine`, `Spine3`, limb names such as `Left_Arm`/`Left_ForeArm`, and ankle bones as semantic feet.
 
 ## Unresolved issues

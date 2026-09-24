@@ -121,9 +121,9 @@ export function usePoseTracker() {
           baseOptions: { modelAssetPath: MEDIAPIPE_CONFIG.modelAssetPath, delegate },
           runningMode: "VIDEO",
           numPoses: 1,
-          minPoseDetectionConfidence: TRACKING_CONFIG.confidenceThreshold,
-          minPosePresenceConfidence: TRACKING_CONFIG.confidenceThreshold,
-          minTrackingConfidence: TRACKING_CONFIG.confidenceThreshold,
+          minPoseDetectionConfidence: TRACKING_CONFIG.detectorConfidenceThreshold,
+          minPosePresenceConfidence: TRACKING_CONFIG.detectorConfidenceThreshold,
+          minTrackingConfidence: TRACKING_CONFIG.trackerConfidenceThreshold,
           outputSegmentationMasks: false,
         });
 

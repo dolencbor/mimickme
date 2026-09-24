@@ -14,6 +14,44 @@ import type { PoseFrame } from "@/lib/tracking/types";
 
 const clamp = (value: number, limit: number) => Math.max(-limit, Math.min(limit, value));
 
+function reliableImageDistance(frame: PoseFrame, from: "leftShoulder" | "rightShoulder" | "leftHip" | "rightHip", to: "leftHip" | "rightHip" | "leftKnee" | "rightKnee") {
+  const start = frame.joints[from];
+  const end = frame.joints[to];
+  if (!start || !end) return null;
+  if (start.confidence < TRACKING_CONFIG.confidenceThreshold || end.confidence < TRACKING_CONFIG.confidenceThreshold) return null;
+  return Math.hypot(start.image.x - end.image.x, start.image.y - end.image.y);
+}
+
+function apparentBodyScale(frame: PoseFrame, neutral: PoseFrame) {
+  let ratioTotal = 0;
+  let ratioCount = 0;
+  const leftTorso = reliableImageDistance(frame, "leftShoulder", "leftHip");
+  const neutralLeftTorso = reliableImageDistance(neutral, "leftShoulder", "leftHip");
+  if (leftTorso && neutralLeftTorso) {
+    ratioTotal += leftTorso / neutralLeftTorso;
+    ratioCount += 1;
+  }
+  const rightTorso = reliableImageDistance(frame, "rightShoulder", "rightHip");
+  const neutralRightTorso = reliableImageDistance(neutral, "rightShoulder", "rightHip");
+  if (rightTorso && neutralRightTorso) {
+    ratioTotal += rightTorso / neutralRightTorso;
+    ratioCount += 1;
+  }
+  const leftThigh = reliableImageDistance(frame, "leftHip", "leftKnee");
+  const neutralLeftThigh = reliableImageDistance(neutral, "leftHip", "leftKnee");
+  if (leftThigh && neutralLeftThigh) {
+    ratioTotal += leftThigh / neutralLeftThigh;
+    ratioCount += 1;
+  }
+  const rightThigh = reliableImageDistance(frame, "rightHip", "rightKnee");
+  const neutralRightThigh = reliableImageDistance(neutral, "rightHip", "rightKnee");
+  if (rightThigh && neutralRightThigh) {
+    ratioTotal += rightThigh / neutralRightThigh;
+    ratioCount += 1;
+  }
+  return ratioCount > 0 ? ratioTotal / ratioCount : 1;
+}
+
 export function useSkeletalMotion(poseFrameRef: RefObject<PoseFrame>, calibration: CalibrationProfile | null) {
   const skeletalFrameRef = useRef<SkeletalFrame>({ ...EMPTY_SKELETAL_FRAME });
   const mapper = useMemo(() => calibration ? new SkeletonMapper(calibration) : null, [calibration]);
@@ -40,6 +78,10 @@ export function useSkeletalMotion(poseFrameRef: RefObject<PoseFrame>, calibratio
           rootPosition[1] = clamp(
             (neutralCenter.y - poseFrame.bodyCenter.y) * TRACKING_CONFIG.rootVerticalScale,
             TRACKING_CONFIG.rootVerticalLimit,
+          );
+          rootPosition[2] = clamp(
+            (apparentBodyScale(poseFrame, calibration.neutralPose) - 1) * TRACKING_CONFIG.rootDepthScale,
+            TRACKING_CONFIG.rootDepthLimit,
           );
         }
         const bonePose = mapper.map(poseFrame);
