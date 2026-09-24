@@ -4,11 +4,13 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, type RefObject } from "react";
 import { Group, MathUtils } from "three";
 import { HOLOGRAM_MOTION_CONFIG } from "@/config/hologram";
+import { hasUsableSkeletalMotion, type SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import { TrackingState } from "@/lib/tracking/types";
 
 type Props = {
   motionRef: RefObject<Group | null>;
   trackingInfluenceRef: RefObject<number>;
+  skeletalFrameRef: RefObject<SkeletalFrame>;
   trackingState: TrackingState;
   modelRadius: number;
 };
@@ -17,7 +19,7 @@ function normalizeAngle(angle: number) {
   return MathUtils.euclideanModulo(angle + Math.PI, Math.PI * 2) - Math.PI;
 }
 
-export function HologramMotionController({ motionRef, trackingInfluenceRef, trackingState, modelRadius }: Props) {
+export function HologramMotionController({ motionRef, trackingInfluenceRef, skeletalFrameRef, trackingState, modelRadius }: Props) {
   const stateRef = useRef(trackingState);
   const idleAngleRef = useRef(0);
   const lossDeadlineRef = useRef(0);
@@ -29,7 +31,7 @@ export function HologramMotionController({ motionRef, trackingInfluenceRef, trac
 
   useFrame((state, deltaSeconds) => {
     const nowMs = state.clock.elapsedTime * 1_000;
-    const isTracking = stateRef.current === TrackingState.TRACKING;
+    const isTracking = stateRef.current === TrackingState.TRACKING && hasUsableSkeletalMotion(skeletalFrameRef.current);
     if (isTracking) lossDeadlineRef.current = nowMs + HOLOGRAM_MOTION_CONFIG.trackingLostDelayMs;
     const shouldTakeOver = isTracking || nowMs < lossDeadlineRef.current;
 

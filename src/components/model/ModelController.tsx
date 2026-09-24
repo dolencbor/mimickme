@@ -10,7 +10,7 @@ import { TRACKING_CONFIG } from "@/config/tracking";
 import { collectBones, detectBoneMapping, type BoneMappingReport } from "@/lib/model/boneMapping";
 import { isAvatarMeshName } from "@/lib/model/inspectModel";
 import { getModelBounds } from "@/lib/model/modelBounds";
-import type { SkeletalFrame } from "@/lib/tracking/skeletalFrame";
+import { hasUsableSkeletalMotion, type SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import { FittedBounds } from "./FittedBounds";
 
 const ANIMATION_ORDER: readonly SemanticBone[] = [
@@ -121,8 +121,9 @@ export function ModelController({
 
   useFrame((_, deltaSeconds) => {
     const frame = skeletalFrameRef.current;
-    if (trackingInfluenceRef && frame.trackingActive) lastTrackedFrameRef.current = frame;
-    const motionFrame = trackingInfluenceRef ? (frame.trackingActive ? frame : lastTrackedFrameRef.current) : frame;
+    const hasTrackedMotion = hasUsableSkeletalMotion(frame);
+    if (trackingInfluenceRef && hasTrackedMotion) lastTrackedFrameRef.current = frame;
+    const motionFrame = trackingInfluenceRef ? (hasTrackedMotion ? frame : lastTrackedFrameRef.current) : frame;
     const trackingInfluence = trackingInfluenceRef ? trackingInfluenceRef.current : 1;
     const smoothing = 1 - Math.exp(-TRACKING_CONFIG.rotationSmoothingSpeed * deltaSeconds);
     const rootSmoothing = 1 - Math.exp(-TRACKING_CONFIG.positionSmoothingSpeed * deltaSeconds);

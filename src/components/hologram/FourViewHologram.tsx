@@ -101,6 +101,7 @@ export function FourViewHologram({ modelUrl, skeletalFrameRef, trackingState, av
             <HologramMotionController
               motionRef={motionRef}
               trackingInfluenceRef={trackingInfluenceRef}
+              skeletalFrameRef={skeletalFrameRef}
               trackingState={trackingState}
               modelRadius={modelRadius}
             />
