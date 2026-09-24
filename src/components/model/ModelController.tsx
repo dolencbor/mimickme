@@ -6,15 +6,11 @@ import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Bone, Group, Mesh, Quaternion, SkeletonHelper, Sphere, Vector3 } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
-import { CLOTH_CONFIG } from "@/config/cloth";
 import { TRACKING_CONFIG } from "@/config/tracking";
-import { ClothDeformer } from "@/lib/cloth/applyClothDeformation";
-import { logRuntimeClothDiagnostic } from "@/lib/cloth/inspectCloth";
-import { SecondaryClothMotion } from "@/lib/cloth/SecondaryClothMotion";
 import { collectBones, detectBoneMapping, type BoneMappingReport } from "@/lib/model/boneMapping";
 import { isAvatarMeshName } from "@/lib/model/inspectModel";
 import { getModelBounds } from "@/lib/model/modelBounds";
-import { hasUsableSkeletalMotion, type SkeletalFrame } from "@/lib/tracking/skeletalFrame";
+import type { SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import { FittedBounds } from "./FittedBounds";
 
 const ANIMATION_ORDER: readonly SemanticBone[] = [
@@ -76,7 +72,7 @@ export function ModelController({
     const center = bounds.getCenter(new Vector3());
     const radius = bounds.getBoundingSphere(new Sphere()).radius || 1;
     if (centerModel) nextModel.position.sub(center);
-    return { model: nextModel, radius, bounds, cloth: new ClothDeformer(nextModel) };
+    return { model: nextModel, radius, bounds };
   }, [centerModel, gltf.scene]);
   const model = prepared.model;
   const rig = useMemo(() => {
@@ -102,15 +98,9 @@ export function ModelController({
   }), []);
   const rootTargetRef = useRef(new Vector3());
   const lastTrackedFrameRef = useRef<SkeletalFrame | null>(null);
-  const clothMotion = useMemo(() => new SecondaryClothMotion(), []);
-  const clothAnchor = useMemo(() => new Vector3(), []);
-  const zeroClothOffset = useMemo(() => new Vector3(), []);
 
   useEffect(() => onBoneMap(rig.report), [onBoneMap, rig.report]);
   useEffect(() => onModelRadius?.(prepared.radius), [onModelRadius, prepared.radius]);
-  useEffect(() => logRuntimeClothDiagnostic(model, url), [model, url]);
-  useEffect(() => clothMotion.reset(), [clothMotion, model]);
-  useEffect(() => () => prepared.cloth.dispose(), [prepared.cloth]);
 
   useEffect(() => {
     model.traverse((object) => {
@@ -131,9 +121,8 @@ export function ModelController({
 
   useFrame((_, deltaSeconds) => {
     const frame = skeletalFrameRef.current;
-    const hasTrackedMotion = hasUsableSkeletalMotion(frame);
-    if (trackingInfluenceRef && hasTrackedMotion) lastTrackedFrameRef.current = frame;
-    const motionFrame = trackingInfluenceRef ? (hasTrackedMotion ? frame : lastTrackedFrameRef.current) : frame;
+    if (trackingInfluenceRef && frame.trackingActive) lastTrackedFrameRef.current = frame;
+    const motionFrame = trackingInfluenceRef ? (frame.trackingActive ? frame : lastTrackedFrameRef.current) : frame;
     const trackingInfluence = trackingInfluenceRef ? trackingInfluenceRef.current : 1;
     const smoothing = 1 - Math.exp(-TRACKING_CONFIG.rotationSmoothingSpeed * deltaSeconds);
     const rootSmoothing = 1 - Math.exp(-TRACKING_CONFIG.positionSmoothingSpeed * deltaSeconds);
@@ -166,16 +155,6 @@ export function ModelController({
         bone.updateWorldMatrix(true, false);
       }
     }
-
-    const anchorBone = rig.targets.hips?.[0] ?? rig.targets.spine?.[0];
-    if (!CLOTH_CONFIG.clothEnabled || !prepared.cloth.active || !anchorBone) {
-      clothMotion.reset(anchorBone?.getWorldPosition(clothAnchor));
-      prepared.cloth.setWorldOffset(zeroClothOffset, 0);
-      return;
-    }
-    anchorBone.getWorldPosition(clothAnchor);
-    const clothOffset = clothMotion.update(clothAnchor, deltaSeconds, CLOTH_CONFIG);
-    prepared.cloth.setWorldOffset(clothOffset, CLOTH_CONFIG.clothInfluence);
   });
 
   const content = (

@@ -1,7 +1,7 @@
 import { Matrix4, Quaternion, Vector3 } from "three";
 import type { SemanticBone } from "@/config/boneMap";
 import type { CalibrationProfile } from "./calibration";
-import { reliablePosePoint } from "./poseReliability";
+import { posePoint } from "./calibration";
 import type { PoseFrame, PoseJointName, Vec3 } from "./types";
 
 export type QuaternionTuple = [number, number, number, number];
@@ -51,8 +51,8 @@ export class SkeletonMapper {
   }
 
   private readDirection(frame: PoseFrame, fromName: PoseJointName, toName: PoseJointName, target: Vector3) {
-    const from = reliablePosePoint(frame, fromName);
-    const to = reliablePosePoint(frame, toName);
+    const from = posePoint(frame, fromName);
+    const to = posePoint(frame, toName);
     if (!from || !to) return false;
     trackerVector(from, this.from);
     trackerVector(to, this.to);
@@ -63,10 +63,10 @@ export class SkeletonMapper {
   }
 
   private readTorsoOrientation(frame: PoseFrame, target: Quaternion) {
-    const leftShoulder = reliablePosePoint(frame, "leftShoulder");
-    const rightShoulder = reliablePosePoint(frame, "rightShoulder");
-    const leftHip = reliablePosePoint(frame, "leftHip");
-    const rightHip = reliablePosePoint(frame, "rightHip");
+    const leftShoulder = posePoint(frame, "leftShoulder");
+    const rightShoulder = posePoint(frame, "rightShoulder");
+    const leftHip = posePoint(frame, "leftHip");
+    const rightHip = posePoint(frame, "rightHip");
     if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) return false;
 
     trackerVector(leftShoulder, this.from);

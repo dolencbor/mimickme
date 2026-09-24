@@ -1,4 +1,4 @@
-import { hasTrackablePoseSegment, isPoseJointReliable } from "./poseReliability";
+import { TRACKING_CONFIG } from "@/config/tracking";
 import type { PoseFrame, PoseJoint, PoseJointName, Vec3 } from "./types";
 
 type LandmarkLike = Vec3 & { visibility?: number };
@@ -67,19 +67,8 @@ export function processPoseResult(result: PoseResultLike, timestamp: number): Po
   }
 
   const confidence = confidenceSamples > 0 ? confidenceTotal / confidenceSamples : 0;
-  const partialFrame: PoseFrame = {
-    timestamp,
-    confidence,
-    bodyCenter: null,
-    worldBodyCenter: null,
-    joints,
-    trackingActive: false,
-  };
-  const hipsReliable = isPoseJointReliable(partialFrame, "leftHip") && isPoseJointReliable(partialFrame, "rightHip");
-  const bodyCenter = hipsReliable ? midpoint(joints.leftHip?.image, joints.rightHip?.image) : null;
-  const worldBodyCenter = hipsReliable
-    ? midpoint(joints.leftHip?.world ?? undefined, joints.rightHip?.world ?? undefined)
-    : null;
+  const bodyCenter = midpoint(joints.leftHip?.image, joints.rightHip?.image);
+  const worldBodyCenter = midpoint(joints.leftHip?.world ?? undefined, joints.rightHip?.world ?? undefined);
 
   return {
     timestamp,
@@ -87,6 +76,8 @@ export function processPoseResult(result: PoseResultLike, timestamp: number): Po
     bodyCenter,
     worldBodyCenter,
     joints,
-    trackingActive: hasTrackablePoseSegment(partialFrame),
+    trackingActive:
+      confidence >= TRACKING_CONFIG.confidenceThreshold &&
+      Boolean(joints.leftShoulder && joints.rightShoulder && joints.leftHip && joints.rightHip),
   };
 }

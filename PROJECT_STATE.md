@@ -27,10 +27,6 @@
 - The built-in model is the validated FV2.1 production structure. Future clothing/design variants must preserve its 88-bone avatar hierarchy; runtime mapping is pinned to those exact bone names.
 - `src/lib/model/modelBounds.ts` handles the FV2.1 export's centimeter skeleton root and already-metered skinned vertices, preventing Three.js CPU bounds from framing the rendered avatar 100× too closely without changing bind matrices.
 - All four Pepper's Ghost viewports default to a vertical flip, with the top, left, right, and bottom heads oriented toward their respective outside edges. Calibration storage is versioned to apply the corrected orientation on existing browsers.
-- Skeletal motion is confidence-gated per body segment. Visible limbs and torso regions can move independently, while off-camera or low-confidence regions return to their neutral pose until their required landmarks are reliable again; neutral calibration still requires a reliable full-body pose.
-- Hologram control is keyed to usable live skeletal motion, not only the coarse tracking status. It smoothly blends from idle rotation/float into the camera-driven pose, briefly holds through tracking dropouts, and blends back to idle when usable motion is absent.
-- Runtime cloth Phase 1 validates the built-in `Cloth` as two Three.js `SkinnedMesh` primitives sharing the avatar's 88-bone skeleton. Development builds emit one concise aggregated cloth diagnostic per model URL.
-- Runtime cloth Phase 2 adds one fixed-step secondary-motion proxy per model controller. The proxy follows the skinned hips, uses spring/damping/gravity/inertial response, and supplies a post-skinning GPU offset to both garment primitives without React state or geometry mutation.
 
 ## Important files
 
@@ -49,9 +45,6 @@
 - `src/lib/tracking/skeletalFrame.ts` and `src/components/tracking/useSkeletalMotion.ts` — processed cross-window motion state.
 - `src/lib/channel/trackingChannel.ts` and `src/components/channel/` — versioned BroadcastChannel protocol and lifecycle hooks.
 - `src/lib/model/modelStorage.ts` — built-in/local model persistence and per-window resolution.
-- `src/lib/cloth/inspectCloth.ts` — runtime garment skinning/attribute validation and development diagnostic.
-- `src/lib/cloth/SecondaryClothMotion.ts` and `applyClothDeformation.ts` — low-resolution fixed-step cloth proxy and post-skinning GPU deformation bridge.
-- `src/config/cloth.ts` — current cloth enablement and core motion constants.
 - `src/components/hologram/HologramOutput.tsx`, `FourViewHologram.tsx`, and `HologramMotionController.tsx` — synchronized four-view output, idle/takeover blending, custom camera renderer, and fullscreen control.
 - `src/components/hologram/HologramCalibrationPanel.tsx` and `useHologramCalibration.ts` — hidden calibration controls and persistent client state.
 - `src/lib/hologram/calibration.ts` — calibration schema, bounds, defaults, validation, persistence, and reset.
@@ -78,8 +71,6 @@
 - Checks: TypeScript, ESLint, production build, hidden keyboard toggle, live global/per-view control updates, persistence across reload, complete reset, responsive panel layout, and browser console/error-overlay checks pass.
 - Phase 9 — Harden + Deploy: complete.
 - Checks: strict unused-symbol TypeScript check, ESLint, diff hygiene, reproducible dependency lock, production build, `next start`, all three routes, cross-window mirror connection, one-canvas/no-video hologram isolation, calibration shortcut, and zero production console warnings or errors all pass.
-- Runtime cloth Phase 1 — inspect + validate: complete. The installed `Cloth` has 11,178 vertices across two material primitives, `skinIndex`/`skinWeight`, normalized four-influence weights, and the same 88-bone signature as the avatar. Chosen approach: a small fixed-step secondary-motion proxy updated once in `ModelController`, with GPU deformation of the dense render mesh and no physics-engine dependency.
-- Runtime cloth Phase 2 — secondary cloth core: complete. A clamped 60 Hz spring proxy adds secondary motion after normal GPU skinning; disabling `clothEnabled` zeros the offset and preserves ordinary skeletal rendering. The dense render garment is not CPU-simulated.
 
 ## Bone mappings
 
@@ -89,7 +80,7 @@
 
 ## Unresolved issues
 
-- The supplied production structure has been validated and installed. Region-aware Blender weights keep skirt/bodice vertices out of arm chains while each sleeve follows only its matching arm; the clean export excludes helper geometry.
+- The supplied production structure has been validated and installed. Its accidental unskinned `Cloth_SOURCE_BACKUP_CURRENT` export was excluded from the clean built-in GLB.
 - Automated browser runs completed calibration in Phase 3, but sustained full-body movement was not available long enough to visually validate every limb axis and the full root-translation range; confirm with a fully visible standing subject before exhibition use.
 - IndexedDB cross-window support remains available for local compatible GLBs.
 - Physical pyramid orientation may require changing the isolated view rotation/flip values during on-site calibration.

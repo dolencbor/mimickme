@@ -20,12 +20,3 @@ export const EMPTY_SKELETAL_FRAME: SkeletalFrame = {
 export function skeletalFrameFromBonePose(bonePose: BonePose, trackingActive: boolean, rootPosition: RootPosition): SkeletalFrame {
   return { timestamp: bonePose.timestamp, trackingActive, rootPosition, rotations: bonePose.rotations };
 }
-
-export function hasUsableSkeletalMotion(frame: SkeletalFrame) {
-  if (!frame.trackingActive) return false;
-  if (frame.rootPosition[0] !== 0 || frame.rootPosition[1] !== 0 || frame.rootPosition[2] !== 0) return true;
-  for (const semantic in frame.rotations) {
-    if (frame.rotations[semantic as SemanticBone]) return true;
-  }
-  return false;
-}
