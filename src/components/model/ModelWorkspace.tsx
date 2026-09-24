@@ -11,6 +11,7 @@ import {
   storeLocalModel,
 } from "@/lib/model/modelStorage";
 import type { ModelReport, ModelSource } from "@/lib/model/types";
+import { AppNavigation } from "@/components/ui/AppNavigation";
 import { SwitchControl } from "@/components/ui/SwitchControl";
 import { ModelInspector } from "./ModelInspector";
 import { ModelViewer } from "./ModelViewer";
@@ -97,11 +98,7 @@ export function ModelWorkspace() {
             <h1>Digital garment mirror</h1>
           </div>
         </div>
-        <nav aria-label="Primary routes">
-          <Link className="nav-link active" href="/" aria-current="page">Model</Link>
-          <Link className="nav-link" href="/mirror">Mirror</Link>
-          <Link className="nav-link" href="/hologram">Hologram</Link>
-        </nav>
+        <AppNavigation current="model" />
       </header>
 
       <section className="setup-panel" aria-labelledby="model-setup-title">

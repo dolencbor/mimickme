@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useTrackingTransmitter } from "@/components/channel/useTrackingTransmitter";
 import { TrackedModelViewport } from "@/components/model/TrackedModelViewport";
@@ -14,6 +13,7 @@ import {
 import type { CursorHand } from "@/lib/tracking/handCursor";
 import { TRACKED_JOINTS, TrackingState } from "@/lib/tracking/types";
 import { CalibrationStatus } from "./CalibrationStatus";
+import { AppNavigation } from "@/components/ui/AppNavigation";
 import { SwitchControl } from "@/components/ui/SwitchControl";
 import { HandCursorOverlay } from "./HandCursorOverlay";
 import { PoseLandmarkOverlay } from "./PoseLandmarkOverlay";
@@ -105,43 +105,47 @@ export function PoseTrackerView() {
     <main className={`tracking-page ${exhibitionMode ? "exhibition-mode" : ""}`}>
       <header className="tracking-header">
         {!exhibitionMode ? (
-          <div className="brand-lockup">
-            <span className="brand-mark" aria-hidden="true">M</span>
-            <div>
-              <p className="eyebrow">MIMICKME / LIVE STUDIO</p>
-              <h1>Live garment mirror</h1>
-            </div>
-          </div>
-        ) : <span className={`exhibition-status ${trackingState.toLowerCase()}`}>{STATE_LABEL[trackingState]}</span>}
-        <div className="tracking-actions">
-          {!exhibitionMode ? (
-            <div className="tracking-control-group">
-              <span className={`channel-status ${channelStatus}`} aria-live="polite">OUTPUT {channelStatus}</span>
-              <div className="header-switches">
-                <SwitchControl compact label="Debug" checked={debugVisible} onChange={setDebugVisible} />
-                <SwitchControl compact label="Avatar" checked={avatarVisible} onChange={setAvatarVisible} />
-                <SwitchControl compact label="Clothes" checked={garmentVisible} onChange={setGarmentVisible} />
+          <>
+            <div className="brand-lockup">
+              <span className="brand-mark" aria-hidden="true">M</span>
+              <div>
+                <p className="eyebrow">MIMICKME / LIVE STUDIO</p>
+                <h1>Live garment mirror</h1>
               </div>
             </div>
-          ) : null}
+            <AppNavigation current="mirror" />
+          </>
+        ) : (
+          <>
+            <span className={`exhibition-status ${trackingState.toLowerCase()}`}>{STATE_LABEL[trackingState]}</span>
+            <button className="button secondary exhibition-exit" type="button" onClick={() => setExhibitionMode(false)}>Exit exhibition</button>
+          </>
+        )}
+      </header>
+
+      {!exhibitionMode ? (
+        <section className="mirror-toolbar" aria-label="Mirror controls">
+          <div className="tracking-control-group">
+            <span className={`channel-status ${channelStatus}`} aria-live="polite">OUTPUT {channelStatus}</span>
+            <div className="header-switches">
+              <SwitchControl compact label="Debug" checked={debugVisible} onChange={setDebugVisible} />
+              <SwitchControl compact label="Avatar" checked={avatarVisible} onChange={setAvatarVisible} />
+              <SwitchControl compact label="Clothes" checked={garmentVisible} onChange={setGarmentVisible} />
+            </div>
+          </div>
           <div className="tracking-button-group">
             {isRunning ? (
-              !exhibitionMode ? <button className="button secondary" type="button" onClick={stop}>Stop camera</button> : null
+              <button className="button secondary" type="button" onClick={stop}>Stop camera</button>
             ) : (
               <button className="button primary" type="button" onClick={start} disabled={isBusy}>
                 {isBusy ? "Starting…" : "Start camera"}
               </button>
             )}
-            {!exhibitionMode ? (
-              <>
-              <button className="button secondary" type="button" onClick={enterExhibitionMode}>Exhibition mode</button>
-              <button className="button primary" type="button" onClick={openHologram}>Make it a hologram</button>
-              <Link className="button secondary" href="/">Model setup</Link>
-              </>
-            ) : <button className="button secondary exhibition-exit" type="button" onClick={() => setExhibitionMode(false)}>Exit exhibition</button>}
+            <button className="button secondary" type="button" onClick={enterExhibitionMode}>Exhibition mode</button>
+            <button className="button primary" type="button" onClick={openHologram}>Open hologram output</button>
           </div>
-        </div>
-      </header>
+        </section>
+      ) : null}
 
       <section className="tracking-layout" aria-label="Live camera and tracked avatar">
         <div className="camera-shell studio-card" aria-label="Camera preview">

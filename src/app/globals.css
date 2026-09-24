@@ -35,13 +35,13 @@ a { color: inherit; }
 
 .workspace, .tracking-page { width: min(100%, 1720px); min-height: 100svh; margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); }
 .workspace { display: grid; grid-template-rows: auto auto minmax(460px, 1fr) auto; gap: 16px; }
-.tracking-page { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 16px; }
+.tracking-page { position: relative; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 16px; }
 .topbar, .tracking-header { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .brand-lockup { min-width: 0; display: flex; align-items: center; gap: 12px; }
 .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 9px; color: #fff; background: var(--primary); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), var(--shadow); font-size: .78rem; font-weight: 750; }
 .topbar h1, .tracking-header h1, .setup-panel h2, .inspector h2, .tracking-diagnostics h2 { margin: 2px 0 0; letter-spacing: -.035em; text-wrap: balance; }
 .topbar h1, .tracking-header h1 { font-size: clamp(1.25rem, 2vw, 1.7rem); font-weight: 650; }
-.topbar nav { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 9px; background: var(--card); box-shadow: var(--shadow); }
+.app-navigation { position: fixed; top: max(18px, env(safe-area-inset-top)); right: max(24px, env(safe-area-inset-right)); z-index: 40; display: flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 9px; color: var(--foreground); background: var(--card); box-shadow: var(--shadow); }
 .nav-link { min-width: 72px; border-radius: 6px; padding: 7px 12px; color: var(--muted); text-align: center; text-decoration: none; font-size: .78rem; font-weight: 600; }
 .nav-link:hover { color: var(--foreground); background: var(--card-subtle); }
 .nav-link.active { color: var(--foreground); background: var(--card-subtle); box-shadow: inset 0 0 0 1px rgba(24,24,23,.05); }
@@ -113,7 +113,7 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 .footer-status { display: inline-flex; align-items: center; gap: 8px; }
 .fatal-error, .tracking-error { border: 1px solid rgba(180,35,44,.24); border-radius: 8px; color: var(--error); background: var(--error-soft); padding: 13px 14px; }
 
-.tracking-actions { flex-direction: column; align-items: flex-end; justify-content: center; }
+.mirror-toolbar { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; background: var(--card); box-shadow: var(--shadow); }
 .tracking-control-group, .tracking-button-group { justify-content: flex-end; }
 .header-switches { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); box-shadow: var(--shadow); }
 .tracking-layout { min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -166,7 +166,7 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 
 .tracking-page.exhibition-mode { width: 100%; height: 100vh; min-height: 620px; padding: 0; grid-template-rows: minmax(0, 1fr); gap: 0; overflow: hidden; background: #000; }
 .exhibition-mode .tracking-header { position: fixed; top: 14px; right: 14px; left: 14px; z-index: 20; justify-content: space-between; pointer-events: none; }
-.exhibition-mode .tracking-actions, .exhibition-mode .exhibition-status { pointer-events: auto; }
+.exhibition-mode .exhibition-exit, .exhibition-mode .exhibition-status { pointer-events: auto; }
 .exhibition-mode .tracking-layout { grid-row: 1; gap: 1px; background: #222; }
 .exhibition-mode .camera-shell, .exhibition-mode .tracked-model-shell { min-height: 0; border: 0; border-radius: 0; }
 .exhibition-mode .camera-badge { display: none; }
@@ -186,6 +186,7 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 .hologram-controls { position: fixed; top: 20px; right: 20px; left: 20px; z-index: 10; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; pointer-events: none; }
 .hologram-controls > * { pointer-events: auto; }
 .hologram-controls h1 { margin: 4px 0 0; font-size: clamp(1.3rem, 3vw, 2.4rem); font-weight: 500; letter-spacing: -.03em; }
+.hologram-page-actions { position: fixed; top: 66px; right: max(24px, env(safe-area-inset-right)); z-index: 10; }
 .hologram-output .button.primary { color: #080808; background: var(--text); border-color: var(--text); }
 .hologram-output .button.secondary { color: var(--text); background: transparent; border-color: var(--line); box-shadow: none; }
 .hologram-status { position: fixed; right: 20px; bottom: 20px; left: 20px; z-index: 10; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
@@ -214,17 +215,14 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 .calibration-shortcut { margin: 12px 0 0; color: #666; font-size: .65rem; text-align: right; }
 
 @media (max-width: 1180px) {
-  .tracking-header { align-items: flex-start; flex-direction: column; padding-bottom: 2px; }
-  .tracking-actions { width: 100%; align-items: flex-start; justify-content: flex-start; }
+  .mirror-toolbar { align-items: flex-start; flex-direction: column; }
   .tracking-control-group, .tracking-button-group { justify-content: flex-start; }
 }
 @media (max-width: 860px) {
   .workspace, .tracking-page { padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
   .workspace { grid-template-rows: auto auto auto auto; }
-  .topbar, .setup-panel, .phase-footer { align-items: flex-start; flex-direction: column; }
+  .setup-panel, .phase-footer { align-items: flex-start; flex-direction: column; }
   .topbar { padding-bottom: 4px; }
-  .topbar nav { width: 100%; }
-  .nav-link { flex: 1; text-align: center; }
   .setup-panel { padding: 18px; }
   .section-icon { display: none; }
   .button-row { width: 100%; }
@@ -232,21 +230,25 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
   .model-layout, .tracking-layout { grid-template-columns: 1fr; }
   .viewer-shell { min-height: 58vh; }
   .viewer-toolbar { align-items: flex-start; flex-direction: column; padding: 12px 14px; }
-  .tracking-header { align-items: flex-start; flex-direction: column; }
-  .tracking-actions, .tracking-control-group, .tracking-button-group { width: 100%; justify-content: flex-start; }
+  .mirror-toolbar, .tracking-control-group, .tracking-button-group { width: 100%; justify-content: flex-start; }
   .camera-shell, .tracked-model-shell { min-height: 55vh; }
   .tracking-diagnostics { top: 140px; right: 12px; width: calc(100vw - 24px); max-height: calc(100vh - 152px); }
   .mirror-calibration-overlay { width: calc(100% - 28px); }
   .tracking-page.exhibition-mode { height: auto; min-height: 100vh; overflow: auto; }
   .exhibition-mode .tracking-layout { grid-template-columns: 1fr; }
   .exhibition-mode .camera-shell, .exhibition-mode .tracked-model-shell { min-height: 50vh; }
-  .hologram-controls { flex-direction: column; }
   .hologram-status { align-items: flex-start; flex-direction: column; }
   .hologram-status span + span { padding-left: 0; border-left: 0; }
   .hologram-calibration-panel { top: 10px; right: 10px; width: calc(100vw - 20px); max-height: calc(100vh - 20px); }
 }
 
 @media (max-width: 620px) {
+  .app-navigation { top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); left: max(10px, env(safe-area-inset-left)); }
+  .nav-link { flex: 1; text-align: center; }
+  .topbar, .tracking-header { padding-top: 48px; }
+  .hologram-controls { top: 64px; }
+  .hologram-controls h1 { font-size: 1.35rem; }
+  .hologram-page-actions { top: 126px; right: max(10px, env(safe-area-inset-right)); }
   .brand-mark { width: 32px; height: 32px; }
   .tracking-control-group { align-items: stretch; flex-direction: column; }
   .tracking-button-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }

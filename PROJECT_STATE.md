@@ -35,6 +35,7 @@
 - The setup, smart-mirror, diagnostics, and calibration UI use a light Coss-inspired token system with crisp opaque borders, subtle bottom shadows, compact cards, badges, and accessible switch controls. Geist Sans is self-hosted for interface text and Geist Mono is reserved for technical values; the physical hologram projection canvas intentionally remains black.
 - Model viewports retain the same black stage as the camera feed for consistent contrast. The mirror camera card lists available video inputs after permission is granted and can replace the active webcam without rebuilding the MediaPipe landmarker; hologram presentation and calibration styling remain unchanged.
 - Vercel Web Interface Guidelines polish groups mirror status/visibility separately from primary actions, improves compact and mobile wrapping, adds consistent keyboard focus treatment and live-region status announcements, respects safe areas and reduced-motion preferences, and keeps diagnostics numerically aligned without changing runtime behavior.
+- Model, mirror, and hologram routes share one fixed, route-aware three-item navigation control. Page-specific camera and fullscreen actions remain in separate toolbars so navigation geometry and order stay stable between screens.
 
 ## Important files
 

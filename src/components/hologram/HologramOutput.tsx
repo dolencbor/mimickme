@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useTrackingReceiver } from "@/components/channel/useTrackingReceiver";
 import { useResolvedModel } from "@/components/model/useResolvedModel";
+import { AppNavigation } from "@/components/ui/AppNavigation";
 import { FourViewHologram } from "./FourViewHologram";
 import { HologramCalibrationPanel } from "./HologramCalibrationPanel";
 import { useHologramCalibration } from "./useHologramCalibration";
@@ -54,11 +54,12 @@ export function HologramOutput() {
           <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 8</p>
           <h1>Calibrated hologram</h1>
         </div>
-        <div className="button-row">
-          <button className="button primary" type="button" onClick={enterFullscreen}>Enter fullscreen</button>
-          <Link className="button secondary" href="/mirror">Open mirror</Link>
-        </div>
+        <AppNavigation current="hologram" />
       </header>
+
+      <div className="hologram-page-actions">
+        <button className="button primary" type="button" onClick={enterFullscreen}>Enter fullscreen</button>
+      </div>
 
       <div className="hologram-status" aria-live="polite">
         <span className={`connection-dot ${status}`} />
