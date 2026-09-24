@@ -10,7 +10,11 @@ import {
   type HologramGoodbye,
   type HologramHello,
 } from "@/lib/channel/trackingChannel";
-import { BUILT_IN_MODEL_CONFIG, type ModelConfiguration } from "@/lib/model/modelStorage";
+import {
+  BUILT_IN_MODEL_CONFIG,
+  getActiveModelConfiguration,
+  type ModelConfiguration,
+} from "@/lib/model/modelStorage";
 import { EMPTY_SKELETAL_FRAME, type SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import { TrackingState } from "@/lib/tracking/types";
 
@@ -23,9 +27,14 @@ export function useTrackingReceiver() {
   const [garmentVisible, setGarmentVisible] = useState(true);
 
   useEffect(() => {
+    const cachedModel = getActiveModelConfiguration();
+    const cachedModelFrame = window.requestAnimationFrame(() => setModel(cachedModel));
     if (!supportsTrackingChannel()) {
       const frame = window.requestAnimationFrame(() => setStatus("unsupported"));
-      return () => window.cancelAnimationFrame(frame);
+      return () => {
+        window.cancelAnimationFrame(cachedModelFrame);
+        window.cancelAnimationFrame(frame);
+      };
     }
     const channel = new BroadcastChannel(TRACKING_CHANNEL_NAME);
     const clientId = window.crypto.randomUUID();
@@ -34,7 +43,7 @@ export function useTrackingReceiver() {
     let currentTrackingState = TrackingState.NO_PERSON;
     let currentAvatarVisible = true;
     let currentGarmentVisible = true;
-    let currentModel = BUILT_IN_MODEL_CONFIG;
+    let currentModel = cachedModel;
     const sayHello = () => {
       const message: HologramHello = {
         type: "HOLOGRAM_HELLO",
@@ -87,6 +96,7 @@ export function useTrackingReceiver() {
       }
     }, 1_000);
     return () => {
+      window.cancelAnimationFrame(cachedModelFrame);
       window.clearInterval(heartbeat);
       const goodbye: HologramGoodbye = {
         type: "HOLOGRAM_GOODBYE",

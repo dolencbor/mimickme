@@ -37,9 +37,10 @@ function FourCameraRenderer({ presentationRef, modelRadius, calibration }: Rende
     const horizontalOffset = (size.width - cellSize * 3) / 2;
     const verticalOffset = (size.height - cellSize * 3) / 2;
     const halfFovRadians = MathUtils.degToRad(HOLOGRAM_RENDER_CONFIG.cameraFovDeg / 2);
+    const scaledModelRadius = modelRadius * calibration.scale;
     const baseDistance = Math.max(
       HOLOGRAM_RENDER_CONFIG.minimumCameraDistance,
-      (modelRadius / Math.sin(halfFovRadians)) * HOLOGRAM_RENDER_CONFIG.framingMargin,
+      (scaledModelRadius / Math.sin(halfFovRadians)) * HOLOGRAM_RENDER_CONFIG.framingMargin,
     ) * calibration.cameraDistance;
 
     gl.setScissorTest(false);
