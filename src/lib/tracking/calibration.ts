@@ -1,4 +1,5 @@
-import { TRACKED_JOINTS, type PoseFrame, type PoseJoint, type PoseJointName, type Vec3 } from "./types";
+import { TRACKED_JOINTS, type PoseFrame, type PoseJoint, type Vec3 } from "./types";
+import { hasReliableFullBodyPose } from "./poseReliability";
 
 export type CalibrationProfile = {
   createdAt: number;
@@ -43,7 +44,7 @@ function point(joint: PoseJoint | undefined) {
 }
 
 export function createCalibrationProfile(frames: readonly PoseFrame[]): CalibrationProfile | null {
-  const validFrames = frames.filter((frame) => frame.trackingActive);
+  const validFrames = frames.filter((frame) => frame.trackingActive && hasReliableFullBodyPose(frame));
   if (validFrames.length === 0) return null;
 
   const joints: PoseFrame["joints"] = {};
@@ -103,8 +104,4 @@ export function createCalibrationProfile(frames: readonly PoseFrame[]): Calibrat
     bodyCenter: hipCenter,
     facingDirection,
   };
-}
-
-export function posePoint(frame: PoseFrame, name: PoseJointName): Vec3 | null {
-  return point(frame.joints[name]);
 }
