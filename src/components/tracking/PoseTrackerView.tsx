@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTrackingTransmitter } from "@/components/channel/useTrackingTransmitter";
 import { TrackedModelViewport } from "@/components/model/TrackedModelViewport";
 import { useResolvedModel } from "@/components/model/useResolvedModel";
 import type { BoneMappingReport } from "@/lib/model/boneMapping";
+import { COTTON_PRESET, cottonSettings, type ClothSettings } from "@/lib/cloth/ClothMaterialPresets";
 import {
   BUILT_IN_MODEL_CONFIG,
   getActiveModelConfiguration,
@@ -47,6 +48,8 @@ export function PoseTrackerView() {
   const [boneReport, setBoneReport] = useState<BoneMappingReport | null>(null);
   const [modelConfiguration, setModelConfiguration] = useState<ModelConfiguration>(BUILT_IN_MODEL_CONFIG);
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const [clothSettings, setClothSettings] = useState<ClothSettings>(cottonSettings);
+  const effectiveClothSettings = useMemo(() => ({ ...COTTON_PRESET, ...clothSettings }), [clothSettings]);
   const { stage: calibrationStage, profile: calibrationProfile, recalibrate } = useCalibration({
     trackerPhase: phase,
     trackingState,
@@ -64,6 +67,9 @@ export function PoseTrackerView() {
   });
   const isRunning = phase === "running";
   const isBusy = phase === "initializing";
+  const updateClothSetting = <Key extends keyof ClothSettings>(key: Key, value: ClothSettings[Key]) => {
+    setClothSettings((current) => ({ ...current, [key]: value }));
+  };
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setModelConfiguration(getActiveModelConfiguration()));
@@ -155,6 +161,7 @@ export function PoseTrackerView() {
             avatarVisible={avatarVisible}
             skeletonVisible={skeletonVisible}
             onBoneMap={handleBoneMap}
+            clothSettings={effectiveClothSettings}
           />
           <div className="camera-badge">Tracked model · {modelSource.label}</div>
           <div className="mirror-calibration-overlay">
@@ -193,6 +200,21 @@ export function PoseTrackerView() {
           </dl>
 
           <div className="debug-controls">
+            <label className="debug-toggle">
+              <input type="checkbox" checked={effectiveClothSettings.enabled} onChange={(event) => updateClothSetting("enabled", event.target.checked)} />
+              CLOTH PHYSICS
+            </label>
+            <div className="cloth-controls">
+              <label><span>Mass <output>{effectiveClothSettings.mass.toFixed(2)}</output></span><input type="range" min="0.2" max="2" step="0.05" value={effectiveClothSettings.mass} onChange={(event) => updateClothSetting("mass", Number(event.target.value))} /></label>
+              <label><span>Gravity <output>{effectiveClothSettings.gravityScale.toFixed(2)}</output></span><input type="range" min="0" max="1.5" step="0.05" value={effectiveClothSettings.gravityScale} onChange={(event) => updateClothSetting("gravityScale", Number(event.target.value))} /></label>
+              <label><span>Damping <output>{effectiveClothSettings.damping.toFixed(2)}</output></span><input type="range" min="0" max="0.3" step="0.01" value={effectiveClothSettings.damping} onChange={(event) => updateClothSetting("damping", Number(event.target.value))} /></label>
+              <label><span>Stretch <output>{effectiveClothSettings.stretchStiffness.toFixed(2)}</output></span><input type="range" min="0.1" max="1" step="0.05" value={effectiveClothSettings.stretchStiffness} onChange={(event) => updateClothSetting("stretchStiffness", Number(event.target.value))} /></label>
+              <label><span>Bend <output>{effectiveClothSettings.bendStiffness.toFixed(2)}</output></span><input type="range" min="0" max="0.8" step="0.02" value={effectiveClothSettings.bendStiffness} onChange={(event) => updateClothSetting("bendStiffness", Number(event.target.value))} /></label>
+              <label><span>Attachment <output>{effectiveClothSettings.attachmentStrength.toFixed(2)}</output></span><input type="range" min="0.1" max="1.5" step="0.05" value={effectiveClothSettings.attachmentStrength} onChange={(event) => updateClothSetting("attachmentStrength", Number(event.target.value))} /></label>
+              <label><span>Collision <output>{effectiveClothSettings.collisionThickness.toFixed(3)}</output></span><input type="range" min="0" max="0.05" step="0.002" value={effectiveClothSettings.collisionThickness} onChange={(event) => updateClothSetting("collisionThickness", Number(event.target.value))} /></label>
+              <label><span>Iterations <output>{effectiveClothSettings.constraintIterations}</output></span><input type="range" min="1" max="8" step="1" value={effectiveClothSettings.constraintIterations} onChange={(event) => updateClothSetting("constraintIterations", Number(event.target.value))} /></label>
+              <button className="button secondary" type="button" onClick={() => setClothSettings(cottonSettings())}>Cotton reset</button>
+            </div>
             <label className="debug-toggle">
               <input type="checkbox" checked={skeletonVisible} onChange={(event) => setSkeletonVisible(event.target.checked)} />
               SKELETON

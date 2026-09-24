@@ -7,6 +7,8 @@ import { Bone, Group, Mesh, Quaternion, SkeletonHelper, Sphere, Vector3 } from "
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SEMANTIC_BONES, type SemanticBone } from "@/config/boneMap";
 import { TRACKING_CONFIG } from "@/config/tracking";
+import { ClothSimulation } from "@/lib/cloth/ClothSimulation";
+import { COTTON_PRESET, type ClothSettings } from "@/lib/cloth/ClothMaterialPresets";
 import { collectBones, detectBoneMapping, type BoneMappingReport } from "@/lib/model/boneMapping";
 import { isAvatarMeshName } from "@/lib/model/inspectModel";
 import { getModelBounds } from "@/lib/model/modelBounds";
@@ -47,6 +49,7 @@ type Props = {
   motionRef?: RefObject<Group | null>;
   trackingInfluenceRef?: RefObject<number>;
   onModelRadius?: (radius: number) => void;
+  clothSettings?: ClothSettings;
 };
 
 export function ModelController({
@@ -63,6 +66,7 @@ export function ModelController({
   motionRef,
   trackingInfluenceRef,
   onModelRadius,
+  clothSettings = COTTON_PRESET,
 }: Props) {
   const rootRef = useRef<Group>(null);
   const gltf = useGLTF(url);
@@ -75,6 +79,7 @@ export function ModelController({
     return { model: nextModel, radius, bounds };
   }, [centerModel, gltf.scene]);
   const model = prepared.model;
+  const cloth = useMemo(() => new ClothSimulation(model), [model]);
   const rig = useMemo(() => {
     const report = detectBoneMapping(model);
     const allBones = collectBones(model);
@@ -101,6 +106,8 @@ export function ModelController({
 
   useEffect(() => onBoneMap(rig.report), [onBoneMap, rig.report]);
   useEffect(() => onModelRadius?.(prepared.radius), [onModelRadius, prepared.radius]);
+  useEffect(() => cloth.setSettings(clothSettings), [cloth, clothSettings]);
+  useEffect(() => () => cloth.dispose(), [cloth]);
 
   useEffect(() => {
     model.traverse((object) => {
@@ -156,6 +163,8 @@ export function ModelController({
         bone.updateWorldMatrix(true, false);
       }
     }
+    model.updateWorldMatrix(true, true);
+    cloth.step(deltaSeconds);
   });
 
   const content = (

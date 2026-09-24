@@ -4,6 +4,7 @@ import { Environment, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Suspense, type RefObject } from "react";
 import type { BoneMappingReport } from "@/lib/model/boneMapping";
+import type { ClothSettings } from "@/lib/cloth/ClothMaterialPresets";
 import type { SkeletalFrame } from "@/lib/tracking/skeletalFrame";
 import { ModelErrorBoundary } from "./ModelErrorBoundary";
 import { ModelController } from "./ModelController";
@@ -14,6 +15,7 @@ type Props = {
   avatarVisible: boolean;
   skeletonVisible: boolean;
   onBoneMap: (report: BoneMappingReport) => void;
+  clothSettings?: ClothSettings;
   backgroundColor?: string;
 };
 

@@ -118,6 +118,12 @@ summary { cursor: pointer; font-size: .8rem; }
 .bone-map-list dt { color: var(--muted); }
 .bone-map-list dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
 .debug-controls { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 18px; }
+.cloth-controls { display: grid; gap: 10px; border: 1px solid var(--line); padding: 12px; }
+.cloth-controls label { display: grid; gap: 5px; color: var(--muted); font-size: .68rem; }
+.cloth-controls label span { display: flex; justify-content: space-between; gap: 12px; }
+.cloth-controls output { color: var(--text); font-family: monospace; }
+.cloth-controls input { width: 100%; accent-color: #fff; }
+.cloth-controls .button { justify-self: start; padding: 8px 10px; }
 .hand-selector { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .65rem; font-weight: 700; letter-spacing: .08em; }
 .hand-selector button { border: 1px solid var(--line); padding: 6px 8px; color: var(--muted); background: transparent; cursor: pointer; font: inherit; }
 .hand-selector button[aria-pressed="true"] { border-color: var(--text); color: var(--text); }

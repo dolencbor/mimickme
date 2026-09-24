@@ -6,10 +6,10 @@ const STORE_NAME = "models";
 const ACTIVE_MODEL_KEY = "fashion-mirror-active-model-v1";
 
 export const BUILT_IN_MODEL_CONFIG: ModelConfiguration = {
-  id: "mimickme-avatar-v1",
-  label: "MimickMe exhibition avatar",
+  id: "mimickme-cloth-v2",
+  label: "MimickMe cloth-ready avatar",
   kind: "built-in",
-  url: "/models/mimickme-avatar.glb",
+  url: "/models/mimickme-cloth-ready.glb",
 };
 
 export type ModelConfiguration = {
