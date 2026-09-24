@@ -36,6 +36,9 @@ export function PoseTrackerView() {
     trackingState,
     diagnostics,
     error,
+    cameraDevices,
+    selectedCameraId,
+    selectCamera,
     start,
     stop,
     setCalibrating,
@@ -143,6 +146,20 @@ export function PoseTrackerView() {
           <video ref={videoRef} className="camera-feed" autoPlay muted playsInline />
           <PoseLandmarkOverlay enabled={debugVisible && isRunning} poseFrameRef={poseFrameRef} videoRef={videoRef} />
           <HandCursorOverlay enabled={debugVisible && isRunning} hand={cursorHand} poseFrameRef={poseFrameRef} />
+          {!exhibitionMode ? (
+            <label className="camera-source-control">
+              <span>Camera</span>
+              <select
+                value={selectedCameraId}
+                onChange={(event) => void selectCamera(event.currentTarget.value)}
+                disabled={isBusy || cameraDevices.length === 0}
+                aria-label="Camera source"
+              >
+                {cameraDevices.length === 0 ? <option value="">Default camera</option> : null}
+                {cameraDevices.map((camera) => <option key={camera.deviceId} value={camera.deviceId}>{camera.label}</option>)}
+              </select>
+            </label>
+          ) : null}
           {!isRunning ? (
             <div className="camera-placeholder">
               <span>{isBusy ? "Loading MediaPipe…" : "Camera is off"}</span>

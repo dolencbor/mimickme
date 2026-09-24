@@ -82,7 +82,7 @@ a { color: inherit; }
 .viewer-title { display: inline-flex; align-items: center; gap: 8px; color: var(--foreground); }
 .status-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #a6a6a1; }
 .viewer-title .status-dot, .footer-status.valid .status-dot, .status-chip.valid .status-dot { background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
-.viewer-canvas { position: relative; min-height: 0; background: var(--card-subtle); }
+.viewer-canvas { position: relative; min-height: 0; background: #111; }
 .viewer-canvas > div, .viewer-canvas canvas { width: 100% !important; height: 100% !important; }
 .viewer-message { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; padding: 24px; color: var(--muted); text-align: center; font-size: .85rem; }
 .error-message { color: var(--error); }
@@ -115,12 +115,15 @@ summary { cursor: pointer; font-size: .78rem; font-weight: 600; }
 .tracking-layout { min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .camera-shell, .tracked-model-shell { position: relative; min-height: 540px; overflow: hidden; }
 .camera-shell { background: #111; }
-.tracked-model-shell { background: var(--card-subtle); }
+.tracked-model-shell { background: #111; }
 .camera-feed, .pose-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); }
 .pose-overlay { pointer-events: none; }
 .pose-overlay.hidden { display: none; }
 .camera-placeholder { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 16px; color: #aaa; background: radial-gradient(circle at 50% 45%, #252525, #121212 66%); font-size: .85rem; }
 .camera-badge { position: absolute; left: 14px; bottom: 14px; z-index: 3; color: rgba(255,255,255,.76); background: rgba(20,20,20,.72); border-color: rgba(255,255,255,.16); backdrop-filter: blur(10px); }
+.camera-source-control { position: absolute; top: 14px; right: 14px; z-index: 4; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 6px 8px; color: rgba(255,255,255,.72); background: rgba(20,20,20,.78); backdrop-filter: blur(12px); font-size: .68rem; font-weight: 600; }
+.camera-source-control select { max-width: 190px; border: 0; outline: 0; color: #fff; background: transparent; font-size: .68rem; }
+.camera-source-control select:disabled { opacity: .55; }
 .tracked-model-canvas, .tracked-model-canvas > div, .tracked-model-canvas canvas { width: 100%; height: 100%; }
 .tracked-model-shell > .camera-badge { top: 14px; bottom: auto; color: var(--muted); background: rgba(255,255,255,.8); border-color: var(--border); }
 .tracking-diagnostics { position: fixed; top: 92px; right: 24px; z-index: 12; width: min(360px, calc(100vw - 48px)); max-height: calc(100vh - 116px); overflow: auto; padding: 20px; box-shadow: var(--shadow-lg); }
@@ -169,40 +172,42 @@ summary { cursor: pointer; font-size: .78rem; font-weight: 600; }
 .exhibition-mode .calibration-status.ready h3 { margin: 0; font-size: .78rem; }
 .exhibition-mode .calibration-status.ready > .button { margin-top: 0; padding: 7px 9px; font-size: .65rem; }
 
-/* Projection stays black for the physical hologram; its controls use light coss surfaces. */
-.hologram-output { position: relative; width: 100vw; height: 100vh; overflow: hidden; color: #f7f7f7; background: #000; }
+/* The physical hologram keeps its original dark presentation unchanged. */
+.hologram-output { --line: #303030; --text: #f5f5f5; --muted: #9a9a9a; position: relative; width: 100vw; height: 100vh; overflow: hidden; color: var(--text); background: #000; }
 .hologram-preview { position: absolute; inset: 0; display: grid; place-items: center; background: #000; }
 .hologram-stage { position: relative; width: min(100vw, 100vh); height: min(100vw, 100vh); background: #000; }
 .hologram-stage > div, .hologram-stage canvas { width: 100% !important; height: 100% !important; }
 .hologram-view-labels { position: absolute; inset: 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); pointer-events: none; }
 .hologram-view-labels span { align-self: end; justify-self: center; margin-bottom: 8px; color: #383838; font-size: clamp(.5rem, .8vw, .7rem); font-weight: 700; letter-spacing: .16em; }
-.hologram-controls { position: fixed; top: 18px; right: 18px; left: 18px; z-index: 10; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; pointer-events: none; }
+.hologram-controls { position: fixed; top: 20px; right: 20px; left: 20px; z-index: 10; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; pointer-events: none; }
 .hologram-controls > * { pointer-events: auto; }
-.hologram-heading-card { border: 1px solid rgba(255,255,255,.13); border-radius: 9px; padding: 11px 13px; background: rgba(17,17,17,.75); box-shadow: 0 12px 30px rgba(0,0,0,.22); backdrop-filter: blur(12px); }
-.hologram-controls h1 { margin: 3px 0 0; font-size: clamp(1.15rem, 2.5vw, 1.65rem); font-weight: 650; letter-spacing: -.035em; }
-.hologram-controls .button.secondary { color: #f7f7f7; background: rgba(17,17,17,.75); border-color: rgba(255,255,255,.18); }
-.hologram-status { position: fixed; right: 18px; bottom: 18px; left: 18px; z-index: 10; display: flex; align-items: center; gap: 10px; width: fit-content; border: 1px solid rgba(255,255,255,.13); border-radius: 999px; padding: 8px 11px; color: #aaa; background: rgba(17,17,17,.75); backdrop-filter: blur(12px); font-size: .62rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
-.hologram-status span + span { padding-left: 10px; border-left: 1px solid rgba(255,255,255,.13); }
-.connection-dot { width: 8px; height: 8px; padding: 0 !important; border: 0 !important; border-radius: 50%; background: var(--warning); }
-.connection-dot.connected { background: #60cf85; box-shadow: 0 0 12px rgba(96,207,133,.55); }
-.connection-dot.unsupported { background: #ff7d85; }
-.hologram-error { position: fixed; bottom: 62px; left: 18px; z-index: 11; max-width: 460px; margin: 0; padding: 10px 12px; border: 1px solid rgba(255,125,133,.35); border-radius: 8px; color: #ff9da3; background: rgba(20,0,2,.88); font-size: .72rem; }
-.hologram-calibration-panel { position: fixed; top: 18px; right: 18px; z-index: 30; width: min(400px, calc(100vw - 36px)); max-height: calc(100vh - 36px); overflow: auto; border: 1px solid var(--border); border-radius: 12px; padding: 20px; color: var(--foreground); background: rgba(255,255,255,.96); box-shadow: var(--shadow-lg); backdrop-filter: blur(16px); }
+.hologram-controls h1 { margin: 4px 0 0; font-size: clamp(1.3rem, 3vw, 2.4rem); font-weight: 500; letter-spacing: -.03em; }
+.hologram-output .button.primary { color: #080808; background: var(--text); border-color: var(--text); }
+.hologram-output .button.secondary { color: var(--text); background: transparent; border-color: var(--line); box-shadow: none; }
+.hologram-status { position: fixed; right: 20px; bottom: 20px; left: 20px; z-index: 10; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.hologram-status span + span { padding-left: 10px; border-left: 1px solid var(--line); }
+.connection-dot { width: 8px; height: 8px; padding: 0 !important; border: 0 !important; border-radius: 50%; background: #786137; }
+.connection-dot.connected { background: var(--success); box-shadow: 0 0 12px rgba(131,212,155,.55); }
+.connection-dot.unsupported { background: var(--error); }
+.hologram-error { position: fixed; bottom: 54px; left: 20px; z-index: 11; max-width: 460px; margin: 0; padding: 10px 12px; border: 1px solid #713f3f; color: var(--error); background: rgba(0,0,0,.88); font-size: .75rem; }
+.hologram-calibration-panel { position: fixed; top: 18px; right: 18px; z-index: 30; width: min(390px, calc(100vw - 36px)); max-height: calc(100vh - 36px); overflow: auto; border: 1px solid #444; padding: 18px; color: var(--text); background: rgba(12,12,12,.96); box-shadow: 0 22px 80px rgba(0,0,0,.65); backdrop-filter: blur(12px); }
 .calibration-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.calibration-panel-heading h2 { margin: 3px 0 0; font-size: 1.3rem; font-weight: 650; letter-spacing: -.035em; }
-.calibration-close { width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 7px; padding: 0; color: var(--muted); background: var(--card); cursor: pointer; font-size: 1.25rem; line-height: 1; box-shadow: var(--shadow); }
-.calibration-section { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
-.calibration-section h3 { margin: 0 0 12px; color: var(--muted); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; }
-.calibration-range { display: grid; gap: 7px; margin-top: 11px; color: var(--muted); font-size: .7rem; }
+.calibration-panel-heading h2 { margin: 4px 0 0; font-size: 1.35rem; font-weight: 500; letter-spacing: -.03em; }
+.calibration-close { border: 0; padding: 0 4px; color: var(--muted); background: transparent; cursor: pointer; font-size: 1.8rem; line-height: 1; }
+.calibration-section { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.calibration-section h3 { margin: 0 0 12px; color: var(--muted); font-size: .67rem; letter-spacing: .12em; text-transform: uppercase; }
+.calibration-range { display: grid; gap: 6px; margin-top: 11px; color: var(--muted); font-size: .72rem; }
 .calibration-range > span { display: flex; justify-content: space-between; gap: 12px; }
-.calibration-range output { color: var(--foreground); font-family: var(--font-mono); }
-.calibration-range input { width: 100%; accent-color: var(--primary); }
+.calibration-range output { color: var(--text); font-family: monospace; }
+.calibration-range input { width: 100%; accent-color: #fff; }
 .calibration-view-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.calibration-view { min-width: 0; display: grid; gap: 8px; margin: 0; border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--muted); background: var(--card-subtle); font-size: .64rem; }
-.calibration-view legend { padding: 0 5px; color: var(--foreground); font-size: .63rem; font-weight: 700; letter-spacing: .05em; }
+.calibration-view { min-width: 0; margin: 0; border: 1px solid var(--line); padding: 10px; color: var(--muted); font-size: .66rem; }
+.calibration-view legend { padding: 0 5px; color: var(--text); font-size: .65rem; font-weight: 700; letter-spacing: .08em; }
+.calibration-view > label:not(.calibration-range) { display: inline-flex; align-items: center; gap: 4px; margin: 9px 10px 0 0; }
 .calibration-range.compact { margin-top: 2px; }
 .calibration-panel-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
-.calibration-shortcut { margin: 12px 0 0; color: var(--muted-foreground); font-family: var(--font-mono); font-size: .62rem; text-align: right; }
+.calibration-panel-actions .button { padding: 9px 11px; }
+.calibration-shortcut { margin: 12px 0 0; color: #666; font-size: .65rem; text-align: right; }
 
 @media (max-width: 1180px) {
   .tracking-header { align-items: flex-start; flex-direction: column; padding-bottom: 2px; }
@@ -230,7 +235,7 @@ summary { cursor: pointer; font-size: .78rem; font-weight: 600; }
   .exhibition-mode .tracking-layout { grid-template-columns: 1fr; }
   .exhibition-mode .camera-shell, .exhibition-mode .tracked-model-shell { min-height: 50vh; }
   .hologram-controls { flex-direction: column; }
-  .hologram-status { right: 10px; bottom: 10px; left: 10px; width: auto; align-items: flex-start; flex-direction: column; border-radius: 9px; }
+  .hologram-status { align-items: flex-start; flex-direction: column; }
   .hologram-status span + span { padding-left: 0; border-left: 0; }
   .hologram-calibration-panel { top: 10px; right: 10px; width: calc(100vw - 20px); max-height: calc(100vh - 20px); }
 }

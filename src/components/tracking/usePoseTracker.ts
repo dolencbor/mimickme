@@ -16,6 +16,11 @@ export type TrackerDiagnostics = {
   people: 0 | 1;
 };
 
+export type CameraOption = {
+  deviceId: string;
+  label: string;
+};
+
 function trackerErrorMessage(error: unknown, cameraReady: boolean) {
   if (error instanceof DOMException) {
     if (error.name === "NotAllowedError") return "Camera permission denied. Allow camera access in the browser and try again.";
@@ -41,6 +46,19 @@ export function usePoseTracker() {
   const [trackingState, setTrackingState] = useState(TrackingState.NO_PERSON);
   const [diagnostics, setDiagnostics] = useState<TrackerDiagnostics>({ fps: 0, confidence: 0, backend: null, people: 0 });
   const [error, setError] = useState<string | null>(null);
+  const [cameraDevices, setCameraDevices] = useState<CameraOption[]>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState("");
+
+  const refreshCameraDevices = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return;
+    const devices = (await navigator.mediaDevices.enumerateDevices())
+      .filter((device) => device.kind === "videoinput")
+      .map((device, index) => ({
+        deviceId: device.deviceId,
+        label: device.label || `Camera ${index + 1}`,
+      }));
+    setCameraDevices(devices);
+  }, []);
 
   const disposeResources = useCallback(() => {
     runIdRef.current += 1;
@@ -83,7 +101,11 @@ export function usePoseTracker() {
       const modulePromise = import("@mediapipe/tasks-vision");
       const mediaRequest = navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          ...(selectedCameraId ? { deviceId: { exact: selectedCameraId } } : { facingMode: "user" }),
+        },
       });
       const stream = await new Promise<MediaStream>((resolve, reject) => {
         let timedOut = false;
@@ -108,6 +130,9 @@ export function usePoseTracker() {
         return;
       }
       streamRef.current = stream;
+      const activeDeviceId = stream.getVideoTracks()[0]?.getSettings().deviceId;
+      if (activeDeviceId) setSelectedCameraId(activeDeviceId);
+      void refreshCameraDevices();
       cameraReady = true;
       const video = videoRef.current;
       if (!video) throw new Error("Video element unavailable");
@@ -203,13 +228,66 @@ export function usePoseTracker() {
       setError(trackerErrorMessage(caught, cameraReady));
       setPhase("error");
     }
-  }, [disposeResources, phase]);
+  }, [disposeResources, phase, refreshCameraDevices, selectedCameraId]);
 
-  useEffect(() => disposeResources, [disposeResources]);
+  const selectCamera = useCallback(async (deviceId: string) => {
+    setSelectedCameraId(deviceId);
+    if (phase !== "running" || !navigator.mediaDevices?.getUserMedia) return;
+
+    const runId = runIdRef.current;
+    try {
+      const replacement = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          deviceId: { exact: deviceId },
+        },
+      });
+      if (runId !== runIdRef.current) {
+        replacement.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      const video = videoRef.current;
+      if (!video) throw new Error("Video element unavailable");
+      const previous = streamRef.current;
+      streamRef.current = replacement;
+      video.srcObject = replacement;
+      await video.play();
+      previous?.getTracks().forEach((track) => track.stop());
+      setError(null);
+      void refreshCameraDevices();
+    } catch (caught) {
+      setError(trackerErrorMessage(caught, false));
+    }
+  }, [phase, refreshCameraDevices]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => void refreshCameraDevices());
+    navigator.mediaDevices?.addEventListener?.("devicechange", refreshCameraDevices);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      navigator.mediaDevices?.removeEventListener?.("devicechange", refreshCameraDevices);
+      disposeResources();
+    };
+  }, [disposeResources, refreshCameraDevices]);
 
   const setCalibrating = useCallback((active: boolean) => {
     calibratingRef.current = active;
   }, []);
 
-  return { videoRef, poseFrameRef, phase, trackingState, diagnostics, error, start, stop, setCalibrating };
+  return {
+    videoRef,
+    poseFrameRef,
+    phase,
+    trackingState,
+    diagnostics,
+    error,
+    cameraDevices,
+    selectedCameraId,
+    selectCamera,
+    start,
+    stop,
+    setCalibrating,
+  };
 }

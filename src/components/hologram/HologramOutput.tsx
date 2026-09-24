@@ -50,8 +50,8 @@ export function HologramOutput() {
       </div>
 
       <header className="hologram-controls">
-        <div className="hologram-heading-card">
-          <p className="eyebrow">MIMICKME / HOLOGRAM OUTPUT</p>
+        <div>
+          <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 8</p>
           <h1>Calibrated hologram</h1>
         </div>
         <div className="button-row">

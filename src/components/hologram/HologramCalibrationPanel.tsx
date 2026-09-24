@@ -2,7 +2,6 @@
 
 import { HOLOGRAM_VIEWS, type HologramViewId } from "@/config/hologram";
 import { HOLOGRAM_CALIBRATION_LIMITS, type HologramCalibration } from "@/lib/hologram/calibration";
-import { SwitchControl } from "@/components/ui/SwitchControl";
 
 type Props = {
   calibration: HologramCalibration;
@@ -88,8 +87,8 @@ export function HologramCalibrationPanel({ calibration, onChange, onClose, onRes
                     onChange={(event) => updateView(view.id, { rotationDeg: event.currentTarget.valueAsNumber })}
                   />
                 </label>
-                <SwitchControl compact label="H flip" checked={value.horizontalFlip} onChange={(checked) => updateView(view.id, { horizontalFlip: checked })} />
-                <SwitchControl compact label="V flip" checked={value.verticalFlip} onChange={(checked) => updateView(view.id, { verticalFlip: checked })} />
+                <label><input type="checkbox" checked={value.horizontalFlip} onChange={(event) => updateView(view.id, { horizontalFlip: event.currentTarget.checked })} /> H flip</label>
+                <label><input type="checkbox" checked={value.verticalFlip} onChange={(event) => updateView(view.id, { verticalFlip: event.currentTarget.checked })} /> V flip</label>
               </fieldset>
             );
           })}
