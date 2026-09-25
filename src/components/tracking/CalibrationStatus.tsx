@@ -12,6 +12,13 @@ const STAGE_COPY: Record<CalibrationStage, string> = {
   READY: "Ready",
 };
 
+const STAGE_STATUS: Record<CalibrationStage, string> = {
+  STAND_IN_FRAME: "Waiting",
+  HOLD_NEUTRAL: "Positioning",
+  CALIBRATING: "Calibrating",
+  READY: "Calibrated",
+};
+
 type Props = {
   stage: CalibrationStage;
   profile: CalibrationProfile | null;
@@ -24,7 +31,13 @@ export function CalibrationStatus({ stage, profile, boneReport, onRecalibrate, s
   return (
     <section className={`calibration-status ${stage.toLowerCase()}`} aria-live="polite">
       <div>
-        <p className="eyebrow">CALIBRATION</p>
+        <div className="calibration-status-heading">
+          <p className="eyebrow">Calibration</p>
+          <span className={`calibration-state-tag ${stage.toLowerCase()}`}>
+            <span className="status-dot" />
+            {STAGE_STATUS[stage]}
+          </span>
+        </div>
         <h3>{STAGE_COPY[stage]}</h3>
         <p>
           {stage === "STAND_IN_FRAME" ? "Show any body part clearly to begin." : null}

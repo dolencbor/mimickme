@@ -96,7 +96,6 @@ export function ModelWorkspace() {
         <div className="fatal-error" role="alert">WebGL is unavailable. Enable hardware acceleration or use a WebGL-capable browser.</div>
       ) : (
         <section className="model-layout" aria-label="Model preview and inspection">
-          <ModelInspector source={source} report={report} />
           <div className="model-stage-shell studio-card" aria-label="Interactive model preview">
             <div className="viewer-canvas">
               <ModelViewer
@@ -109,6 +108,7 @@ export function ModelWorkspace() {
               />
             </div>
             <div className="camera-badge">Model preview · {source.kind === "local" ? "Local model" : "Exhibition avatar"}</div>
+            <p className="model-stage-hint">Drag to orbit · Scroll to zoom</p>
             <div className="model-stage-controls" aria-labelledby="model-setup-title">
               <div className="model-source-heading">
                 <p className="eyebrow">model source</p>
@@ -127,17 +127,24 @@ export function ModelWorkspace() {
                 <SwitchControl compact label="Skeleton" checked={skeletonVisible} onChange={setSkeletonVisible} />
               </div>
             </div>
-            <p className="model-stage-hint">Drag to orbit · Scroll to zoom</p>
+            <div className="model-stage-actions">
+              <span className={`model-stage-status ${isValid ? "valid" : ""}`} aria-live="polite">
+                <span className="status-dot" />
+                {isValid ? "Model validation passed" : "Waiting for a valid model"}
+              </span>
+              <Link
+                className={`button primary ${isValid ? "" : "disabled"}`}
+                href={isValid ? "/mirror" : "#"}
+                aria-disabled={!isValid}
+                tabIndex={isValid ? undefined : -1}
+              >
+                Enter Smart Mirror
+              </Link>
+            </div>
           </div>
+          <ModelInspector source={source} report={report} />
         </section>
       )}
-
-      <footer className="phase-footer">
-        <span className={`footer-status ${isValid ? "valid" : ""}`}><span className="status-dot" />{isValid ? "Model validation passed" : "Waiting for a valid model"}</span>
-        <Link className={`button primary ${isValid ? "" : "disabled"}`} href={isValid ? "/mirror" : "#"} aria-disabled={!isValid}>
-          Enter Smart Mirror
-        </Link>
-      </footer>
     </main>
   );
 }
