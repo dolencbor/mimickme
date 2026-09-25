@@ -45,13 +45,13 @@ a { color: inherit; }
 .nav-link { min-width: 72px; border-radius: 6px; padding: 7px 12px; color: var(--muted); text-align: center; text-decoration: none; font-size: .78rem; font-weight: 600; }
 .nav-link:hover { color: var(--foreground); background: var(--card-subtle); }
 .nav-link.active { color: var(--foreground); background: var(--card-subtle); box-shadow: inset 0 0 0 1px rgba(24,24,23,.05); }
-.eyebrow { margin: 0; color: var(--muted-foreground); font-size: .64rem; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
-.eyebrow, .status-chip, .channel-status, .tracking-state, .camera-badge, .exhibition-status, .metrics dt, .hand-selector, .hologram-view-labels span, .hologram-status, .calibration-section h3, .calibration-view legend { font-family: var(--font-mono); }
+.eyebrow { margin: 0; color: var(--muted-foreground); font-size: .64rem; font-weight: 400; letter-spacing: .11em; text-transform: uppercase; }
+.eyebrow, .status-chip, .channel-status, .tracking-state, .camera-badge, .exhibition-status, .metrics dt, .hand-selector, .hologram-view-labels span, .hologram-status, .calibration-section h3, .calibration-view legend { font-family: var(--font-mono); font-weight: 400; }
 .muted { color: var(--muted); line-height: 1.55; }
 
 .setup-panel, .inspector, .viewer-shell, .studio-card, .tracking-diagnostics, .calibration-status { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); }
 .setup-panel { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 32px; padding: 22px 22px 22px 76px; overflow: hidden; }
-.section-icon { position: absolute; left: 22px; top: 22px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); background: var(--card-subtle); box-shadow: inset 0 0 0 1px var(--border); font-family: var(--font-mono); font-size: .66rem; font-weight: 700; }
+.section-icon { position: absolute; left: 22px; top: 22px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); background: var(--card-subtle); box-shadow: inset 0 0 0 1px var(--border); font-family: var(--font-mono); font-size: .66rem; font-weight: 400; }
 .setup-panel h2 { font-size: 1.15rem; font-weight: 650; }
 .setup-panel p:last-child { max-width: 680px; margin: 6px 0 0; font-size: .84rem; }
 .button-row, .toggle-group, .tracking-actions, .header-switches, .tracking-control-group, .tracking-button-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -95,13 +95,13 @@ a { color: inherit; }
 .inspector { overflow: auto; padding: 20px; }
 .inspector-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .inspector h2 { max-width: 220px; font-size: 1.05rem; font-weight: 650; overflow-wrap: anywhere; }
-.status-chip, .channel-status, .tracking-state, .camera-badge, .exhibition-status { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 8px; color: var(--muted); background: var(--card); white-space: nowrap; font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.status-chip, .channel-status, .tracking-state, .camera-badge, .exhibition-status { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 8px; color: var(--muted); background: var(--card); white-space: nowrap; font-size: .62rem; font-weight: 400; letter-spacing: .04em; text-transform: uppercase; }
 .status-chip.valid, .channel-status.connected, .tracking-state.tracking, .exhibition-status.tracking { border-color: rgba(31,122,67,.24); color: var(--success); background: var(--success-soft); }
 .status-chip.invalid, .channel-status.unsupported { border-color: rgba(180,35,44,.24); color: var(--error); background: var(--error-soft); }
 .status-chip.invalid .status-dot { background: var(--error); }
 .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; margin: 22px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--border); }
 .metrics div { padding: 12px; background: var(--card-subtle); }
-.metrics dt { color: var(--muted-foreground); font-size: .65rem; font-weight: 650; text-transform: uppercase; }
+.metrics dt { color: var(--muted-foreground); font-size: .65rem; font-weight: 400; text-transform: uppercase; }
 .metrics dd { margin: 4px 0 0; font-size: 1.2rem; font-weight: 620; font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
 .issues { padding-left: 20px; font-size: .8rem; line-height: 1.55; }
 .issues .error { color: var(--error); }
@@ -109,7 +109,7 @@ a { color: inherit; }
 .success-note { color: var(--success); font-size: .8rem; }
 details { border-top: 1px solid var(--border); padding: 13px 0; }
 summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 600; }
-.name-list { color: var(--muted); font-family: var(--font-mono); font-size: .68rem; line-height: 1.65; overflow-wrap: anywhere; }
+.name-list { color: var(--muted); font-family: var(--font-mono); font-size: .68rem; font-weight: 400; line-height: 1.65; overflow-wrap: anywhere; }
 .phase-footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 2px; color: var(--muted); font-size: .76rem; }
 .footer-status { display: inline-flex; align-items: center; gap: 8px; }
 .fatal-error, .tracking-error { border: 1px solid rgba(180,35,44,.24); border-radius: 8px; color: var(--error); background: var(--error-soft); padding: 13px 14px; }
@@ -138,13 +138,13 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 .tracking-error { font-size: .78rem; line-height: 1.5; }
 .tracking-metrics dd { font-size: 1rem; font-variant-numeric: tabular-nums; }
 .debug-controls { display: grid; gap: 14px; border-top: 1px solid var(--border); padding-top: 17px; }
-.hand-selector { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .65rem; font-weight: 700; letter-spacing: .06em; }
+.hand-selector { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .65rem; font-weight: 400; letter-spacing: .06em; }
 .hand-selector button { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; color: var(--muted); background: var(--card); cursor: pointer; font: inherit; }
 .hand-selector button[aria-pressed="true"] { border-color: var(--foreground); color: var(--foreground); background: var(--card-subtle); }
-.shortcut-note { margin: 0; color: var(--muted-foreground); font-family: var(--font-mono); font-size: .64rem; }
+.shortcut-note { margin: 0; color: var(--muted-foreground); font-family: var(--font-mono); font-size: .64rem; font-weight: 400; }
 .tracked-joints { border-top: 1px solid var(--border); padding-top: 17px; }
 .tracked-joints ul { display: flex; flex-wrap: wrap; gap: 5px; padding: 0; list-style: none; }
-.tracked-joints li { border: 1px solid var(--border); border-radius: 5px; padding: 4px 6px; color: var(--muted); background: var(--card-subtle); font-family: var(--font-mono); font-size: .61rem; text-transform: lowercase; }
+.tracked-joints li { border: 1px solid var(--border); border-radius: 5px; padding: 4px 6px; color: var(--muted); background: var(--card-subtle); font-family: var(--font-mono); font-size: .61rem; font-weight: 400; text-transform: lowercase; }
 .privacy-note { margin: 20px 0 0; color: var(--muted); font-size: .72rem; line-height: 1.5; }
 
 .mirror-calibration-overlay { position: absolute; right: 14px; bottom: 14px; z-index: 4; width: min(350px, calc(100% - 28px)); }
@@ -158,7 +158,7 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 .bone-map-details { margin-top: 14px; padding-bottom: 0; }
 .bone-warning { font-size: .7rem; line-height: 1.5; }
 .bone-map-list { max-height: 190px; overflow: auto; margin: 10px 0 0; }
-.bone-map-list div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: .62rem; }
+.bone-map-list div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: .62rem; font-weight: 400; }
 .bone-map-list dt { color: var(--muted); }
 .bone-map-list dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
 .hand-cursor-layer { position: absolute; inset: 0; z-index: 4; overflow: hidden; pointer-events: none; }
@@ -183,14 +183,14 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 .hologram-stage { position: relative; width: min(100vw, 100vh); height: min(100vw, 100vh); background: #000; }
 .hologram-stage > div, .hologram-stage canvas { width: 100% !important; height: 100% !important; }
 .hologram-view-labels { position: absolute; inset: 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); pointer-events: none; }
-.hologram-view-labels span { align-self: center; justify-self: end; margin-right: 8px; color: #383838; font-size: clamp(.5rem, .8vw, .7rem); font-weight: 700; letter-spacing: .16em; line-height: 1; text-orientation: mixed; writing-mode: vertical-rl; }
+.hologram-view-labels span { align-self: center; justify-self: end; margin-right: 8px; color: #383838; font-size: clamp(.5rem, .8vw, .7rem); font-weight: 400; letter-spacing: .16em; line-height: 1; text-orientation: mixed; writing-mode: vertical-rl; }
 .hologram-controls { position: fixed; top: 20px; right: 20px; left: 20px; z-index: 10; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; pointer-events: none; }
 .hologram-controls > * { pointer-events: auto; }
 .hologram-controls h1 { margin: 4px 0 0; font-size: clamp(1.3rem, 3vw, 2.4rem); font-weight: 500; letter-spacing: -.03em; }
 .hologram-page-actions { position: fixed; top: 66px; right: max(24px, env(safe-area-inset-right)); z-index: 10; }
 .hologram-output .button.primary { color: #080808; background: var(--text); border-color: var(--text); }
 .hologram-output .button.secondary { color: var(--text); background: transparent; border-color: var(--line); box-shadow: none; }
-.hologram-status { position: fixed; right: 20px; bottom: 20px; left: 20px; z-index: 10; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.hologram-status { position: fixed; right: 20px; bottom: 20px; left: 20px; z-index: 10; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .68rem; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; }
 .hologram-status span + span { padding-left: 10px; border-left: 1px solid var(--line); }
 .connection-dot { width: 8px; height: 8px; padding: 0 !important; border: 0 !important; border-radius: 50%; background: #786137; }
 .connection-dot.connected { background: var(--success); box-shadow: 0 0 12px rgba(131,212,155,.55); }
@@ -204,11 +204,11 @@ summary { border-radius: 4px; cursor: pointer; font-size: .78rem; font-weight: 6
 .calibration-section h3 { margin: 0 0 12px; color: var(--muted); font-size: .67rem; letter-spacing: .12em; text-transform: uppercase; }
 .calibration-range { display: grid; gap: 6px; margin-top: 11px; color: var(--muted); font-size: .72rem; }
 .calibration-range > span { display: flex; justify-content: space-between; gap: 12px; }
-.calibration-range output { color: var(--text); font-family: monospace; }
+.calibration-range output { color: var(--text); font-family: var(--font-mono); font-weight: 400; }
 .calibration-range input { width: 100%; accent-color: #fff; }
 .calibration-view-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .calibration-view { min-width: 0; margin: 0; border: 1px solid var(--line); padding: 10px; color: var(--muted); font-size: .66rem; }
-.calibration-view legend { padding: 0 5px; color: var(--text); font-size: .65rem; font-weight: 700; letter-spacing: .08em; }
+.calibration-view legend { padding: 0 5px; color: var(--text); font-size: .65rem; font-weight: 400; letter-spacing: .08em; }
 .calibration-view > label:not(.calibration-range) { display: inline-flex; align-items: center; gap: 4px; margin: 9px 10px 0 0; }
 .calibration-range.compact { margin-top: 2px; }
 .calibration-panel-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }

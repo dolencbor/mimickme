@@ -40,6 +40,7 @@
 - The four hologram cameras use a tighter safe-fit margin so each avatar fills substantially more of its available tile while remaining fully visible. Orientation labels sit vertically on each tile's right edge, parallel to the feed edge and clear of the model.
 - All uppercase interface labels use Geist Mono consistently, including eyebrows, status badges, metric labels, cursor controls, hologram orientation/status text, and calibration labels; regular headings, navigation, buttons, and body copy remain Geist Sans.
 - Skeletal landmark mapping now matches the horizontally mirrored camera preview: movement on the visitor's right side appears on the model's right side of the screen, with bilateral landmarks and tracker X transformed together so torso, head, arms, and legs remain coherent.
+- All Geist Mono interface text uses the Regular 400 weight consistently; Geist Sans hierarchy remains unchanged.
 
 ## Important files
 
