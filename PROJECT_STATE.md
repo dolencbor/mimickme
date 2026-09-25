@@ -24,8 +24,8 @@
 - Phase 9 pauses debug and cursor animation loops while their overlays are hidden, stops calibration polling after completion, and avoids starting skeletal animation work until a mapper exists.
 - Runtime and type dependencies are pinned to exact versions for reproducible installs. Three.js is pinned to `0.182.0`, the last compatible release before the `Clock` deprecation warning surfaced through React Three Fiber.
 - Camera, MediaPipe, object-URL, BroadcastChannel, and animation-frame lifecycles all have explicit cleanup paths. Production camera access is limited to secure contexts (`https://` or localhost).
-- The built-in model is the validated FV2.1 production structure. Future clothing/design variants must preserve its 88-bone avatar hierarchy; runtime mapping is pinned to those exact bone names.
-- `src/lib/model/modelBounds.ts` handles the FV2.1 export's centimeter skeleton root and already-metered skinned vertices, preventing Three.js CPU bounds from framing the rendered avatar 100× too closely without changing bind matrices.
+- The built-in model is the validated `hopefully.glb` production structure: one 65-bone Mixamo armature with separately skinned `body.001` and `Cloth` meshes. Runtime mapping uses exact Mixamo aliases for every directly controlled body segment.
+- `src/lib/model/modelBounds.ts` handles both validated FV2.1 and Mixamo exports whose centimeter armature roots contain already-metered skinned vertices, preventing Three.js CPU bounds from framing the rendered avatar 100× too closely without changing bind matrices.
 - All four Pepper's Ghost viewports default to a vertical flip, with the top, left, right, and bottom heads oriented toward their respective outside edges. Calibration storage is versioned to apply the corrected orientation on existing browsers.
 - Skeletal motion is confidence-gated per body segment. Visible limbs and torso regions can move independently, while off-camera or low-confidence regions return to their neutral pose until their required landmarks are reliable again.
 - Hologram control is keyed to usable live skeletal motion, not only the coarse tracking status. It smoothly blends from idle rotation/float into the camera-driven pose, briefly holds through tracking dropouts, and blends back to idle when usable motion is absent.
@@ -47,7 +47,7 @@
 - `src/app/` — routes and global styles.
 - `src/components/model/` — GLB loading, error boundary, inspection, and viewer UI.
 - `src/lib/model/inspectModel.ts` — pure scene validation and name-based avatar/garment classification.
-- `public/models/mimickme-avatar.glb` — validated canonical exhibition avatar and garment.
+- `public/models/mimickme-avatar.glb` — validated 65-bone Mixamo exhibition avatar and garment installed from `hopefully.glb`.
 - `public/models/demo-rigged.glb` — generated development fixture; no longer the application default.
 - `scripts/generate-demo-model.mjs` — repeatable demo-asset generator.
 - `src/components/tracking/` — webcam lifecycle, MediaPipe runner, debug canvas, and tracking UI.
@@ -89,12 +89,12 @@
 ## Bone mappings
 
 - Runtime mapping uses normalized exact aliases and never silently fuzzy-matches a rig.
-- The built-in FV2.1 mannequin still resolves the complete semantic map for inspection, but runtime tracking is intentionally limited to 12 primary targets through the exact `MANUAL_BONE_MAP` contract in `src/config/boneMap.ts`.
-- Canonical mappings include `Pelvis`, `Spine`, `Spine3`, limb names such as `Left_Arm`/`Left_ForeArm`, and ankle bones as semantic feet.
+- The built-in Mixamo mannequin resolves all required motion targets through exact aliases, while runtime tracking remains intentionally limited to 12 primary targets. The older FV2.1 names remain available as explicit manual fallbacks in `src/config/boneMap.ts`.
+- Built-in mappings include `mixamorig:Hips`, the three-bone spine chain, head/neck, shoulders, arms/forearms, hands, upper/lower legs, and feet.
 
 ## Unresolved issues
 
-- The supplied production structure has been validated and installed. Its accidental unskinned `Cloth_SOURCE_BACKUP_CURRENT` export was excluded from the clean built-in GLB.
+- The supplied `hopefully.glb` production structure has been validated and installed. Its body and garment are independently addressable, share one skin, and deform from the skeleton even when the avatar mesh is hidden.
 - Automated browser runs completed calibration in Phase 3, but sustained full-body movement was not available long enough to visually validate every limb axis and the full root-translation range; confirm with a fully visible standing subject before exhibition use.
 - IndexedDB cross-window support remains available for local compatible GLBs.
 - Physical pyramid orientation may require changing the isolated view rotation/flip values during on-site calibration.

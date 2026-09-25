@@ -36,7 +36,7 @@ pnpm start
 
 ## Model requirements
 
-The built-in `mimickme-avatar.glb` is the canonical FV2.1 mannequin: an 88-bone humanoid armature with separately skinned avatar and garment meshes. Replacement designs may change clothing geometry and materials, but must preserve its avatar hierarchy and exact bone names from `src/config/boneMap.ts`. Keep garment and avatar meshes separate, normalize weights, and use no more than four bone influences per vertex. Static OBJ files cannot receive skeletal tracking without rigging.
+The built-in `mimickme-avatar.glb` is the validated Mixamo exhibition model: a 65-bone humanoid armature with separately skinned `body.001` and `Cloth` meshes. Replacement designs may change clothing geometry and materials, but must retain a supported humanoid hierarchy and exact bone aliases from `src/config/boneMap.ts`. Keep garment and avatar meshes separate, normalize weights, and use no more than four bone influences per vertex. Static OBJ files cannot receive skeletal tracking without rigging.
 
 ## How to use
 

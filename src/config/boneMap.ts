@@ -31,9 +31,9 @@ export const SEMANTIC_BONES = [
 
 export type SemanticBone = (typeof SEMANTIC_BONES)[number];
 
-// Keep runtime control intentionally small. The FV2.1 helper/intermediate bones
-// inherit these rotations through the rig hierarchy and remain at bind-local
-// transforms instead of receiving duplicate tracking deltas.
+// Keep runtime control intentionally small. Helper/intermediate bones inherit
+// these rotations through the rig hierarchy and remain at bind-local transforms
+// instead of receiving duplicate tracking deltas.
 export const DIRECTLY_CONTROLLED_BONES = [
   "hips",
   "spine",
@@ -80,8 +80,8 @@ export const BONE_ALIASES: Record<SemanticBone, readonly string[]> = {
   rightFoot: ["Right_Foot", "RightFoot", "mixamorigRightFoot"],
 };
 
-// Canonical FV2.1 mannequin hierarchy. Future garment GLBs are expected to retain
-// these avatar bone names while clothing geometry and materials may change.
+// Canonical FV2.1 fallback. Exact aliases above also support the validated Mixamo
+// default without weakening the name-based mapping contract.
 export const MANUAL_BONE_MAP: Partial<Record<SemanticBone, string>> = {
   hips: "Pelvis",
   spine: "Spine",

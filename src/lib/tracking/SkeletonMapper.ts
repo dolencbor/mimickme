@@ -259,8 +259,8 @@ export class SkeletonMapper {
       hasChest = this.orientationDelta("torso", this.currentOrientation, this.chestDelta);
     }
     if (hasChest) {
-      // Spine is a sibling of Pelvis in the FV2.1 rig. Driving only the base
-      // spine lets the rest of the torso inherit one coherent orientation.
+      // Driving only the base spine lets the remaining torso chain inherit one
+      // coherent orientation across both the FV2.1 and Mixamo hierarchies.
       this.write(rotations, "spine", this.chestDelta, frame.timestamp, 65 * DEG);
     }
 
