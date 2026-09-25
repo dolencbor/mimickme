@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTrackingReceiver } from "@/components/channel/useTrackingReceiver";
 import { useResolvedModel } from "@/components/model/useResolvedModel";
-import { AppNavigation } from "@/components/ui/AppNavigation";
+import { AppHeader } from "@/components/ui/AppHeader";
 import { FourViewHologram } from "./FourViewHologram";
 import { HologramCalibrationPanel } from "./HologramCalibrationPanel";
 import { useHologramCalibration } from "./useHologramCalibration";
@@ -49,13 +49,7 @@ export function HologramOutput() {
         />
       </div>
 
-      <header className="hologram-controls">
-        <div>
-          <p className="eyebrow">HOLOGRAM OUTPUT / PHASE 8</p>
-          <h1>Calibrated hologram</h1>
-        </div>
-        <AppNavigation current="hologram" />
-      </header>
+      <AppHeader current="hologram" className="hologram-controls" />
 
       <div className="hologram-page-actions">
         <button className="button primary" type="button" onClick={enterFullscreen}>Enter fullscreen</button>

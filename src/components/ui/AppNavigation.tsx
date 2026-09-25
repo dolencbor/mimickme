@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-type AppRoute = "model" | "mirror" | "hologram";
+export type AppRoute = "model" | "mirror" | "hologram";
 
 const APP_ROUTES: ReadonlyArray<{ href: string; label: string; route: AppRoute }> = [
   { href: "/", label: "Model", route: "model" },

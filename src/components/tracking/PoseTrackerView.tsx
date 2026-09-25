@@ -13,7 +13,7 @@ import {
 import type { CursorHand } from "@/lib/tracking/handCursor";
 import { TRACKED_JOINTS, TrackingState } from "@/lib/tracking/types";
 import { CalibrationStatus } from "./CalibrationStatus";
-import { AppNavigation } from "@/components/ui/AppNavigation";
+import { AppHeader } from "@/components/ui/AppHeader";
 import { SwitchControl } from "@/components/ui/SwitchControl";
 import { HandCursorOverlay } from "./HandCursorOverlay";
 import { PoseLandmarkOverlay } from "./PoseLandmarkOverlay";
@@ -103,25 +103,14 @@ export function PoseTrackerView() {
 
   return (
     <main className={`tracking-page ${exhibitionMode ? "exhibition-mode" : ""}`}>
-      <header className="tracking-header">
-        {!exhibitionMode ? (
-          <>
-            <div className="brand-lockup">
-              <span className="brand-mark" aria-hidden="true">M</span>
-              <div>
-                <p className="eyebrow">MIMICKME / LIVE STUDIO</p>
-                <h1>Live garment mirror</h1>
-              </div>
-            </div>
-            <AppNavigation current="mirror" />
-          </>
-        ) : (
-          <>
-            <span className={`exhibition-status ${trackingState.toLowerCase()}`}>{STATE_LABEL[trackingState]}</span>
-            <button className="button secondary exhibition-exit" type="button" onClick={() => setExhibitionMode(false)}>Exit exhibition</button>
-          </>
-        )}
-      </header>
+      {!exhibitionMode ? (
+        <AppHeader current="mirror" />
+      ) : (
+        <header className="tracking-header">
+          <span className={`exhibition-status ${trackingState.toLowerCase()}`}>{STATE_LABEL[trackingState]}</span>
+          <button className="button secondary exhibition-exit" type="button" onClick={() => setExhibitionMode(false)}>Exit exhibition</button>
+        </header>
+      )}
 
       {!exhibitionMode ? (
         <section className="mirror-toolbar" aria-label="Mirror controls">

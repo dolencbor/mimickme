@@ -38,9 +38,8 @@
 - Model, mirror, and hologram routes share one fixed, route-aware three-item navigation control. Page-specific camera and fullscreen actions remain in separate toolbars so navigation geometry and order stay stable between screens.
 - Hologram output initializes from the browser's cached active model before a mirror connects. Versioned calibration resets stale zoom values, and camera fitting accounts for presentation scale so the complete avatar remains inside every default hologram tile.
 - The four hologram cameras use a tighter safe-fit margin so each avatar fills substantially more of its available tile while remaining fully visible. Orientation labels sit vertically on each tile's right edge, parallel to the feed edge and clear of the model.
-- All uppercase interface labels use Geist Mono consistently, including eyebrows, status badges, metric labels, cursor controls, hologram orientation/status text, and calibration labels; regular headings, navigation, buttons, and body copy remain Geist Sans.
 - Skeletal landmark mapping now matches the horizontally mirrored camera preview: movement on the visitor's right side appears on the model's right side of the screen, with bilateral landmarks and tracker X transformed together so torso, head, arms, and legs remain coherent.
-- All Geist Mono interface text uses the Regular 400 weight consistently; Geist Sans hierarchy remains unchanged.
+- Model, Mirror, and Hologram now share one logo-free application header with the `MimickMe™` title and `digital fashion smart mirror` eyebrow. The Model preview occupies the same right-hand stage position as the Mirror avatar, with model-source and visibility controls overlaid inside the black stage. Former monospace labels now use lowercase Geist Sans Medium (500), and Geist Mono is no longer loaded.
 
 ## Important files
 

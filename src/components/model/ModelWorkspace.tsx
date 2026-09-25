@@ -11,7 +11,7 @@ import {
   storeLocalModel,
 } from "@/lib/model/modelStorage";
 import type { ModelReport, ModelSource } from "@/lib/model/types";
-import { AppNavigation } from "@/components/ui/AppNavigation";
+import { AppHeader } from "@/components/ui/AppHeader";
 import { SwitchControl } from "@/components/ui/SwitchControl";
 import { ModelInspector } from "./ModelInspector";
 import { ModelViewer } from "./ModelViewer";
@@ -90,49 +90,14 @@ export function ModelWorkspace() {
 
   return (
     <main className="workspace">
-      <header className="topbar">
-        <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">M</span>
-          <div>
-            <p className="eyebrow">MIMICKME / MODEL STUDIO</p>
-            <h1>Digital garment mirror</h1>
-          </div>
-        </div>
-        <AppNavigation current="model" />
-      </header>
-
-      <section className="setup-panel" aria-labelledby="model-setup-title">
-        <div>
-          <span className="section-icon" aria-hidden="true">01</span>
-          <p className="eyebrow">MODEL SOURCE</p>
-          <h2 id="model-setup-title">Choose your avatar</h2>
-          <p className="muted">Use the exhibition avatar or inspect a compatible local GLB. Local files stay in this browser.</p>
-        </div>
-        <div className="button-row">
-          <button className="button secondary" type="button" onClick={selectBuiltIn}>Use exhibition avatar</button>
-          <label className="button primary">
-            Choose local GLB
-            <input type="file" accept=".glb,model/gltf-binary" onChange={selectLocal} />
-          </label>
-        </div>
-      </section>
+      <AppHeader current="model" />
 
       {!webGLAvailable ? (
         <div className="fatal-error" role="alert">WebGL is unavailable. Enable hardware acceleration or use a WebGL-capable browser.</div>
       ) : (
         <section className="model-layout" aria-label="Model preview and inspection">
-          <div className="viewer-shell" aria-label="Interactive model preview">
-            <div className="viewer-toolbar">
-              <div className="viewer-title">
-                <span className="status-dot" />
-                <span>{source.kind === "local" ? "Local model" : "Exhibition avatar"}</span>
-              </div>
-            <div className="toggle-group" aria-label="Model visibility">
-                <SwitchControl compact label="Avatar" checked={avatarVisible} onChange={setAvatarVisible} />
-                <SwitchControl compact label="Clothes" checked={garmentVisible} onChange={setGarmentVisible} />
-                <SwitchControl compact label="Skeleton" checked={skeletonVisible} onChange={setSkeletonVisible} />
-              </div>
-            </div>
+          <ModelInspector source={source} report={report} />
+          <div className="model-stage-shell studio-card" aria-label="Interactive model preview">
             <div className="viewer-canvas">
               <ModelViewer
                 key={source.id}
@@ -143,9 +108,27 @@ export function ModelWorkspace() {
                 onInspect={handleInspect}
               />
             </div>
-            <p className="viewer-hint">Drag to orbit · Scroll to zoom</p>
+            <div className="camera-badge">Model preview · {source.kind === "local" ? "Local model" : "Exhibition avatar"}</div>
+            <div className="model-stage-controls" aria-labelledby="model-setup-title">
+              <div className="model-source-heading">
+                <p className="eyebrow">model source</p>
+                <h2 id="model-setup-title">Choose your avatar</h2>
+              </div>
+              <div className="button-row">
+                <button className="button secondary" type="button" onClick={selectBuiltIn}>Use exhibition avatar</button>
+                <label className="button primary">
+                  Choose local GLB
+                  <input type="file" accept=".glb,model/gltf-binary" onChange={selectLocal} />
+                </label>
+              </div>
+              <div className="toggle-group" aria-label="Model visibility">
+                <SwitchControl compact label="Avatar" checked={avatarVisible} onChange={setAvatarVisible} />
+                <SwitchControl compact label="Clothes" checked={garmentVisible} onChange={setGarmentVisible} />
+                <SwitchControl compact label="Skeleton" checked={skeletonVisible} onChange={setSkeletonVisible} />
+              </div>
+            </div>
+            <p className="model-stage-hint">Drag to orbit · Scroll to zoom</p>
           </div>
-          <ModelInspector source={source} report={report} />
         </section>
       )}
 
