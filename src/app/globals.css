@@ -44,6 +44,7 @@ a { color: inherit; }
 .nav-link:hover { color: var(--foreground); background: var(--card-subtle); }
 .nav-link.active { color: var(--foreground); background: var(--card-subtle); box-shadow: inset 0 0 0 1px rgba(24,24,23,.05); }
 .eyebrow { margin: 0; color: var(--muted-foreground); font-size: .64rem; font-weight: 500; letter-spacing: .08em; text-transform: lowercase; }
+.eyebrow::first-letter { text-transform: uppercase; }
 .eyebrow, .status-chip, .channel-status, .tracking-state, .camera-badge, .exhibition-status, .metrics dt, .hand-selector, .hologram-view-labels span, .hologram-status, .calibration-section h3, .calibration-view legend { font-family: var(--font-sans); font-weight: 500; text-transform: lowercase; }
 .muted { color: var(--muted); line-height: 1.55; }
 
