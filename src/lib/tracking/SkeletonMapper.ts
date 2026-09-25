@@ -22,6 +22,40 @@ type LimbSegment = {
 
 const DEG = Math.PI / 180;
 const IDENTITY = new Quaternion();
+const MIRRORED_JOINTS: Partial<Record<PoseJointName, PoseJointName>> = {
+  leftEyeInner: "rightEyeInner",
+  leftEye: "rightEye",
+  leftEyeOuter: "rightEyeOuter",
+  rightEyeInner: "leftEyeInner",
+  rightEye: "leftEye",
+  rightEyeOuter: "leftEyeOuter",
+  leftEar: "rightEar",
+  rightEar: "leftEar",
+  mouthLeft: "mouthRight",
+  mouthRight: "mouthLeft",
+  leftShoulder: "rightShoulder",
+  rightShoulder: "leftShoulder",
+  leftElbow: "rightElbow",
+  rightElbow: "leftElbow",
+  leftWrist: "rightWrist",
+  rightWrist: "leftWrist",
+  leftPinky: "rightPinky",
+  rightPinky: "leftPinky",
+  leftIndex: "rightIndex",
+  rightIndex: "leftIndex",
+  leftThumb: "rightThumb",
+  rightThumb: "leftThumb",
+  leftHip: "rightHip",
+  rightHip: "leftHip",
+  leftKnee: "rightKnee",
+  rightKnee: "leftKnee",
+  leftAnkle: "rightAnkle",
+  rightAnkle: "leftAnkle",
+  leftHeel: "rightHeel",
+  rightHeel: "leftHeel",
+  leftFootIndex: "rightFootIndex",
+  rightFootIndex: "leftFootIndex",
+};
 const LIMB_SEGMENTS: readonly LimbSegment[] = [
   { bone: "leftUpperArm", from: "leftShoulder", to: "leftElbow", maxAngle: 135 * DEG },
   { bone: "leftForearm", from: "leftElbow", to: "leftWrist", maxAngle: 135 * DEG },
@@ -34,7 +68,9 @@ const LIMB_SEGMENTS: readonly LimbSegment[] = [
 ];
 
 function trackerVector(value: Vec3, target: Vector3) {
-  return target.set(value.x, -value.y, -value.z);
+  // Match the horizontally mirrored camera preview. Swapping bilateral joint
+  // names preserves anatomical axes after reflecting tracker X into model X.
+  return target.set(-value.x, -value.y, -value.z);
 }
 
 function tuple(value: Quaternion): QuaternionTuple {
@@ -71,7 +107,7 @@ export class SkeletonMapper {
   }
 
   private readPoint(frame: PoseFrame, name: PoseJointName, target: Vector3) {
-    const point = reliablePosePoint(frame, name);
+    const point = reliablePosePoint(frame, MIRRORED_JOINTS[name] ?? name);
     if (!point) return false;
     trackerVector(point, target);
     return Number.isFinite(target.x) && Number.isFinite(target.y) && Number.isFinite(target.z);
